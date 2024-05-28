@@ -34,7 +34,9 @@ target_sources(
           utilities/element_visitor.cpp
           utilities/to_dot.cpp
           utilities/ostream_operators.cpp
-          utilities/parse_id_variant.cpp)
+          utilities/parse_id_variant.cpp
+          process/pa_init.cpp
+          process/audio_capture.cpp)
 
 if(EAT_BUILD_TESTS)
   target_sources(

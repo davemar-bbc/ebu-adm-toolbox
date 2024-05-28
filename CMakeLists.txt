@@ -178,6 +178,9 @@ if(EAT_BUILD)
   if(EAT_BUILD_EXAMPLES)
     add_executable(eat-measure-loudness)
     target_link_libraries(eat-measure-loudness PRIVATE EBU::eat)
+    
+    add_executable(read_audio)
+    target_link_libraries(read_audio PRIVATE EBU::eat portaudio)
 
     add_subdirectory(src/examples)
   endif()

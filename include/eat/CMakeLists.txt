@@ -42,4 +42,6 @@ target_sources(
           utilities/parse_id_variant.hpp
           utilities/to_dot.hpp
           utilities/unwrap_named.hpp
-          utilities/unwrap_shared.hpp)
+          utilities/unwrap_shared.hpp
+          process/pa_init.hpp
+          process/audio_capture.hpp)
