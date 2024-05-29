@@ -80,6 +80,7 @@ if(EAT_BUILD)
   find_package(CLI11 1.9.0 QUIET REQUIRED CONFIG)
   find_package(unofficial-libebur128 QUIET REQUIRED CONFIG)
   find_package(valijson QUIET REQUIRED CONFIG)
+  find_package(portaudio QUIET REQUIRED CONFIG)
 
   # Link dependencies
   target_link_libraries(eat PUBLIC adm bw64 ear)
