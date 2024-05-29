@@ -36,7 +36,12 @@ target_sources(
           utilities/ostream_operators.cpp
           utilities/parse_id_variant.cpp
           process/pa_init.cpp
-          process/audio_capture.cpp)
+          process/audio_capture.cpp
+          process/audio_playback.cpp
+          process/audio_playcap.cpp
+          process/sadmbuilder.cpp
+          process/sadm_generator.cpp
+          process/trigger.cpp)
 
 if(EAT_BUILD_TESTS)
   target_sources(

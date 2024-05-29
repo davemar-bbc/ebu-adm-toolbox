@@ -44,4 +44,9 @@ target_sources(
           utilities/unwrap_named.hpp
           utilities/unwrap_shared.hpp
           process/pa_init.hpp
-          process/audio_capture.hpp)
+          process/audio_capture.hpp
+          process/audio_playback.hpp
+          process/audio_playcap.hpp
+          process/sadmbuilder.hpp
+          process/sadm_generator.hpp
+          process/trigger.hpp)

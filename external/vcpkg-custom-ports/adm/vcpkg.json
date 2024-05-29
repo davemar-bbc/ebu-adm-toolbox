@@ -1,6 +1,6 @@
 {
   "name": "adm",
-  "version-string": "0.13.1",
+  "version-string": "0.14.0",
   "homepage": "https://github.com/ebu/libadm",
   "description": "ITU-R BS.2076 Library",
   "dependencies": [

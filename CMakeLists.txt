@@ -183,6 +183,15 @@ if(EAT_BUILD)
     add_executable(read_audio)
     target_link_libraries(read_audio PRIVATE EBU::eat portaudio)
 
+    add_executable(play_audio)
+    target_link_libraries(play_audio PRIVATE EBU::eat portaudio)
+
+    add_executable(read_play_audio)
+    target_link_libraries(read_play_audio PRIVATE EBU::eat portaudio)
+
+    add_executable(test_sadm)
+    target_link_libraries(test_sadm PRIVATE EBU::eat)
+
     add_subdirectory(src/examples)
   endif()
 endif()

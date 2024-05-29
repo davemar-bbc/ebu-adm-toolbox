@@ -1,2 +1,5 @@
 target_sources(eat-measure-loudness PRIVATE eat_measure_loudness.cpp)
 target_sources(read_audio PRIVATE read_audio.cpp)
+target_sources(play_audio PRIVATE play_audio.cpp)
+target_sources(read_play_audio PRIVATE read_play_audio.cpp)
+target_sources(test_sadm PRIVATE test_sadm.cpp)
