@@ -1,4 +1,4 @@
-#define APLAY
+//#define APLAY
 
 #include <cmath>
 #include <cstdlib>
@@ -13,9 +13,9 @@
 #ifdef APLAY
 #include "eat/process/audio_playback.hpp"
 #else
-#include "eat/process/trigger.hpp"
-#endif
 //#include "eat/process/trigger.hpp"
+#endif
+#include "eat/process/trigger.hpp"
 
 using namespace eat::framework;
 using namespace eat::process;
@@ -51,20 +51,20 @@ int main(int argc, char **argv) {
 #else
   auto trigger_send = g.register_process(make_trigger_send("trigger send"));
 #endif
-  auto sadm_generator = g.register_process(make_sadm_generator("sadm generator", config));
-  auto sadm_output =  g.register_process(make_sadm_output("sadm output"));
+  //auto sadm_generator = g.register_process(make_sadm_generator("sadm generator", config));
+  //auto sadm_output =  g.register_process(make_sadm_output("sadm output"));
 
-  //auto trigger_read = g.register_process(make_trigger_read("trigger read"));
+  auto trigger_read = g.register_process(make_trigger_read("trigger read"));
 
 #ifdef APLAY
   g.connect(reader->get_out_port("out_samples"), audio_player->get_in_port("in_samples"));
-  g.connect(audio_player->get_out_port("out_trigger"), sadm_generator->get_in_port("in_trigger"));
+  //g.connect(audio_player->get_out_port("out_trigger"), sadm_generator->get_in_port("in_trigger"));
 #else
-  g.connect(trigger_send->get_out_port("out_trigger"), sadm_generator->get_in_port("in_trigger"));
+  //g.connect(trigger_send->get_out_port("out_trigger"), sadm_generator->get_in_port("in_trigger"));
 #endif
-  g.connect(sadm_generator->get_out_port("out_sadm"), sadm_output->get_in_port("in_sadm"));
+  //g.connect(sadm_generator->get_out_port("out_sadm"), sadm_output->get_in_port("in_sadm"));
 
-  //g.connect(trigger_send->get_out_port("out_trigger"), trigger_read->get_in_port("in_trigger"));
+  g.connect(trigger_send->get_out_port("out_trigger"), trigger_read->get_in_port("in_trigger"));
   //g.connect(audio_player->get_out_port("out_trigger"), trigger_read->get_in_port("in_trigger"));
 
   Plan p = plan(g);

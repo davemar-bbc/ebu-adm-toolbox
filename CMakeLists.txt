@@ -73,7 +73,7 @@ if(EAT_BUILD)
   target_compile_options(eat PRIVATE ${EAT_COMPILE_OPTIONS})
 
   # Find dependencies (we should fix these to be quiet when asked)
-  find_package(adm 0.14 QUIET REQUIRED CONFIG)
+  find_package(adm 0.13 QUIET REQUIRED CONFIG)
   find_package(bw64 0.10 QUIET REQUIRED CONFIG)
   find_package(ear 0.9 QUIET REQUIRED CONFIG)
   find_package(nlohmann_json 3.2.0 QUIET REQUIRED CONFIG)
@@ -190,10 +190,7 @@ if(EAT_BUILD)
     target_link_libraries(read_play_audio PRIVATE EBU::eat portaudio)
 
     add_executable(test_sadm)
-    target_link_libraries(test_sadm PRIVATE EBU::eat portaudio)
-
-    add_executable(object_chop)
-    target_link_libraries(object_chop PRIVATE EBU::eat)
+    target_link_libraries(test_sadm PRIVATE EBU::eat)
 
     add_subdirectory(src/examples)
   endif()

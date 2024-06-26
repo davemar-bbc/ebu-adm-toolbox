@@ -27,7 +27,7 @@ class ADMReader : public FunctionalAtomicProcess {
 
     ADMData adm;
 
-    auto doc = adm::parseXml(axml, adm::xml::ParserOptions::recursive_node_search);
+    auto doc = adm::parseXml(axml);
     load_chna(*doc, adm.channel_map, *file->chnaChunk());
     adm.document = std::move(doc);
 

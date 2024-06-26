@@ -49,8 +49,4 @@ target_sources(
           process/audio_playcap.hpp
           process/sadmbuilder.hpp
           process/sadm_generator.hpp
-          process/trigger.hpp
-          process/track_analyser.hpp
-          process/object_modifier.hpp
-          process/track_object.hpp
-          process/block_handler.hpp)
+          process/trigger.hpp)
