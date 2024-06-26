@@ -41,7 +41,11 @@ target_sources(
           process/audio_playcap.cpp
           process/sadmbuilder.cpp
           process/sadm_generator.cpp
-          process/trigger.cpp)
+          process/trigger.cpp
+          process/track_analyser.cpp
+          process/object_modifier.cpp
+          process/track_object.cpp
+          process/block_handler.cpp)
 
 if(EAT_BUILD_TESTS)
   target_sources(
