@@ -159,12 +159,12 @@ void BlockModify::duplicatePacks() {
   for (auto track_object : track_objects_) {
     // Generate a list of audioObject IDs that would now reference packs.
     std::vector<std::string> ao_ids;
-    if (track_object.new_audio_object_ids_.size() > 0) {
-      for (size_t i = 0; i < track_object.new_audio_object_ids_.size(); i++) {
-        ao_ids.push_back(track_object.new_audio_object_ids_[i]);
+    if (track_object.newAudioObjectIdsSize() > 0) {
+      for (size_t i = 0; i < track_object.newAudioObjectIdsSize(); i++) {
+        ao_ids.push_back(track_object.newAudioObjectId(i));
       }
     } else {
-      ao_ids.push_back(track_object.audio_object_id_);
+      ao_ids.push_back(track_object.getAudioObjectId());
     }
 
     // Get the audioPackFormat reference for the first audioObject, and make this the pack we'll copy from.
@@ -294,9 +294,10 @@ void BlockObject::getNewTimes(std::shared_ptr<AudioObject> ao, std::vector<Track
     if (track_object.checkObjectMatch(ao)) {
       track_object_m = track_object;
     }
-    if (track_object.new_audio_object_ids_.size() > 0) {
-      for (size_t i = 0; i < static_cast<size_t>(track_object.new_audio_object_ids_.size()); i++) {
-        auto naoi = track_object.new_audio_object_ids_[i];
+
+    if (track_object.newAudioObjectIdsSize() > 0) {
+      for (size_t i = 0; i < static_cast<size_t>(track_object.newAudioObjectIdsSize()); i++) {
+        auto naoi = track_object.newAudioObjectId(i);
         if (naoi == formatId(ao->get<AudioObjectId>())) {
           track_object_m = track_object;
         }
@@ -318,7 +319,7 @@ void BlockObject::getNewTimes(std::shared_ptr<AudioObject> ao, std::vector<Track
 
   track_object_m.print();
 
-  remove_ = track_object_m.remove_;
+  remove_ = track_object_m.getRemove();
 }
 
 
@@ -496,12 +497,6 @@ void BlockHandler::fixInterpolationLengths(std::shared_ptr<AudioChannelFormat> &
       abf.set(jump_position);
     }
   }
-
-  /*for (auto &abf : abfs) {
-    auto jump_position = abf.get<JumpPosition>();
-    auto duration = abf.template get<Duration>().get().asNanoseconds();
-    std::cout << formatId(abf.template get<AudioBlockFormatId>()) << " " << duration.count() << " " << jump_position.get<InterpolationLength>().get().count() << std::endl;
-  }*/
 }
 
 } // namespace: eat::process

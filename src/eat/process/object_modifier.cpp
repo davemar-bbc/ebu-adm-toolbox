@@ -30,7 +30,7 @@ class ObjectModifier : public FunctionalAtomicProcess {
     channel_map_ = adm.channel_map;
     auto block_active = std::move(in_block_active->get_value());
 
-    analyseAdmChna(adm, block_active);
+    analyseAdmChna(block_active);
     shrinkObjects(block_active);
     makeNewObjects();
 
@@ -45,7 +45,7 @@ class ObjectModifier : public FunctionalAtomicProcess {
   }
 
  private:
-  void analyseAdmChna(ADMData adm, BlockActive block_active) {
+  void analyseAdmChna(BlockActive block_active) {
     // Loop through each audioObject
     for (auto ao : adm_->getElements<AudioObject>()) {
       // Get the audioTrackUID references in the audioObject
@@ -62,65 +62,9 @@ class ObjectModifier : public FunctionalAtomicProcess {
 
   void shrinkObjects(BlockActive block_active) {
     for (auto &track_object : track_objects_) {
-      std::vector<int64_t> new_starts;
-      std::vector<int64_t> new_ends;
-
-      // Find the first block_time from object start
-      uint32_t i = 0;
-      do {
-        i++;
-      } while (track_object.start(0).count() >= block_active.block_times[i] &&
-              i < block_active.block_times.size() - 1);
-
-      do {
-        int64_t new_start;
-        int64_t new_end;
-        // Find start
-        bool start_found = track_object.findStart(i, new_start, block_active);
-
-        // Find end
-        bool end_found = false;
-        if (start_found) {
-          end_found = track_object.findEnd(i, new_end, block_active);
-        }
-
-        // If start and ends found add the times to the vectors
-        if (start_found) {
-          new_starts.push_back(new_start);
-        }
-        if (end_found) {
-          new_ends.push_back(new_end);
-        }
-
-        i++;
-        // Finish loop when reached original end point for object
-      } while (i < block_active.block_times.size() - 1 &&
-              track_object.end(0).count() >= block_active.block_times[i - 1]);
-
-      // If the first new_starts wasn't set, the set a new one with zero.
-      /*if (new_starts.size() == 0) {
-        new_starts.push_back(track_object.start(0).count());
-      }*/
-      // If the end of blocks are reached without the last new_ends set, then set a new new_ends
-      if (new_ends.size() < new_starts.size()) {
-        new_ends.push_back(track_object.end(0).count());
-      }
-
-      std::cout << "new_start: ";
-      for (auto new_start : new_starts) {
-        std::cout << new_start << " ";
-        track_object.addNewStart(new_start);
-      }
-      std::cout << std::endl;
-      std::cout << "new_end: ";
-      for (auto new_end : new_ends) {
-        std::cout << new_end << " ";
-        track_object.addNewEnd(new_end);
-      }
-      std::cout << std::endl;
+      track_object.getStartsAndEnds(block_active);
     }
   }
-
 
   void makeNewObjects() {
     // Find the highest audioObject ID number
@@ -175,7 +119,7 @@ class ObjectModifier : public FunctionalAtomicProcess {
       if (track_object.startSize() == 1) {
         for (auto &ao : adm_->getElements<AudioObject>()) {
           if (track_object.checkObjectMatch(ao)) {
-            track_object.remove_ = true;
+            track_object.setRemove();
           }
         }
       }
@@ -233,7 +177,8 @@ class ObjectModifier : public FunctionalAtomicProcess {
     auto new_ao_id = new_ao->template get<AudioObjectId>();
     new_ao_id.set(new_ao_id_value);
     new_ao->set(new_ao_id);
-    track_object.new_audio_object_ids_.push_back(formatId(new_ao_id));
+    //track_object.new_audio_object_ids_.push_back(formatId(new_ao_id));
+    track_object.addNewAudioObjectId(formatId(new_ao_id));
 
     // Set new name
     auto new_ao_name = new_ao->template get<AudioObjectName>().get();
@@ -298,7 +243,7 @@ class ObjectModifier : public FunctionalAtomicProcess {
       std::shared_ptr<AudioObject> ao_rem = nullptr;
       for (auto &ao : adm_->getElements<AudioObject>()) {
         if (track_object.checkObjectMatch(ao)) {
-          if (track_object.remove_) {
+          if (track_object.getRemove()) {
             ao_rem = ao;
           }
         }

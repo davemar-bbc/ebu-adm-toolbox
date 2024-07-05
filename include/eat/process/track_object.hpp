@@ -16,13 +16,20 @@ struct TrackInfo {
   uint32_t track_index;
 };
 
+struct ProdProfLimits {
+  int64_t obj_min_gap_ns;
+  int64_t obj_pre_gap_ns;
+  int64_t obj_post_gap_ns;
+  int64_t obj_min_dur_ns;
+  int64_t obj_max_gap_ns;
+};
 
 class TrackObject {
   public:
     /**
      * Constructor
      */
-    TrackObject() { remove_ = false; };
+    TrackObject();
 
     /**
      * Analyses the ADM and chna chunk.
@@ -30,7 +37,7 @@ class TrackObject {
      * @param adm         Input ADM document
      * @param chna_chunk  Input chna chunk
      */
-    void getAdmInfo(std::shared_ptr<const AudioObject> ao, /*std::shared_ptr<ChnaChunk> chna_chunk,*/
+    void getAdmInfo(std::shared_ptr<const AudioObject> ao,
                     channel_map_t channel_map,
                     BlockActive block_active);
 
@@ -111,17 +118,89 @@ class TrackObject {
      */
     void addNewEnd(int64_t ns) { ends_.push_back(std::chrono::nanoseconds(ns)); };
 
+    /**
+     * Finds the longest track
+     *
+     * @returns  Track index              
+     */
     uint32_t findMaxTrack();
 
+    /**
+     * Get a trackInfo entry
+     *
+     * @param tind            Index of the required track
+     * 
+     * @returns  Track index              
+     */
     TrackInfo getTrackInfo(const uint32_t tind);
 
-  //private:
+    /**
+     * Get the start end ends of each block
+     *
+     * @param block_active    BlockActive data            
+     */
+    void getStartsAndEnds(BlockActive block_active);
+
+    /**
+     * Merge any objects that are close together, modifying the start and end vectors.
+     *
+     * @param new_starts      Start times of objects
+     * @param new_ends        End times of objects
+     * @param min_gap_ns      Minimum gap between object in ns.          
+     */
+    void mergeCloseObjects(std::vector<int64_t> &new_starts, 
+                           std::vector<int64_t> &new_ends, int64_t min_gap_ns);
+
+    /**
+     * Get the size of the vector of new_audio_objects
+     * 
+     * @returns  Size of vector              
+     */
+    size_t newAudioObjectIdsSize() { return new_audio_object_ids_.size(); };
+
+    /**
+     * Get a new_audio_object from vector
+     * 
+     * @param i               Index to vector
+     * 
+     * @returns  new_audio_object              
+     */
+    std::string newAudioObjectId(size_t i) { return new_audio_object_ids_[i]; };
+
+    /**
+     * Add a new_audio_object to vector
+     * 
+     * @param id              audioOBject ID        
+     */
+    void addNewAudioObjectId(std::string id) { new_audio_object_ids_.push_back(id); };
+
+    /**
+     * Get an audio_object
+     * 
+     * @returns  audio_object              
+     */
+    std::string getAudioObjectId() { return audio_object_id_; };
+
+    /**
+     * Get the remove flag
+     * 
+     * @returns  remove true/false              
+     */
+    bool getRemove() { return remove_; };
+
+    /**
+     * Set the remove flag to true
+    */
+    void setRemove() { remove_ = true; };
+
+  private:
     std::string audio_object_id_;                   // audioObject ID for this object
     std::vector<std::chrono::nanoseconds> starts_;  // vector of start times for the object
     std::vector<std::chrono::nanoseconds> ends_;    // vector of end times for the object
     std::vector<TrackInfo> track_info_;             // vector of track information
     std::vector<std::string> new_audio_object_ids_; // The new audioObject IDs that have been generated
     bool remove_;                                   // Set to true to remove audioObject 
+    ProdProfLimits prod_prof_limits_;               // Production profile limits
 };
 
 }  // namespace eat::framework

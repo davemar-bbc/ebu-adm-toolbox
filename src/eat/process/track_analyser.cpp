@@ -41,7 +41,11 @@ class TrackAnalyser : public StreamingAtomicProcess {
         }
         en = sqrt(en / static_cast<float>(info.sample_count));
         en_bool.push_back((en) > thresh ? true : false);
+        /*if (j == 11) {
+          std::cout << en << " ";
+        }*/
       }
+      //std::cout << en_bool[11] << std::endl;
       block_active.active.push_back(en_bool);
       block_active.block_times.push_back(static_cast<int64_t>(1.0e9 * static_cast<double>(samples) / 48000.0));
       samples += static_cast<uint64_t>(info.sample_count);
