@@ -34,26 +34,25 @@ class TrackAnalyser : public StreamingAtomicProcess {
       num_ch = info.channel_count;
 
       std::vector<bool> en_bool;
+      // Loop through each channel
       for (uint32_t j = 0; j < num_ch; j++) {
+        // Measure the RMS mag of the block of samples in the channel
         float en = 0.0;
         for (uint32_t i = 0; i < info.sample_count * num_ch; i += num_ch) {
           en += in_block->data()[i + j] * in_block->data()[i + j];
         }
         en = sqrt(en / static_cast<float>(info.sample_count));
+        // If it's over the threshold set the flag to true
         en_bool.push_back((en) > thresh ? true : false);
-        /*if (j == 11) {
-          std::cout << en << " ";
-        }*/
       }
-      //std::cout << en_bool[11] << std::endl;
       block_active.active.push_back(en_bool);
       block_active.block_times.push_back(static_cast<int64_t>(1.0e9 * static_cast<double>(samples) / 48000.0));
       samples += static_cast<uint64_t>(info.sample_count);
     }
-    //std::cout << "TrackAnalyser:process: " << block_active.active.size() << "," << block_active.active[0].size() << std::endl;
   }
 
   void finalise() override {
+    // Do a last block for the audio
     std::vector<bool> en_bool;
     for (uint32_t j = 0; j < num_ch; j++) {
       en_bool.push_back(false);

@@ -63,6 +63,7 @@ class ObjectModifier : public FunctionalAtomicProcess {
   void shrinkObjects(BlockActive block_active) {
     for (auto &track_object : track_objects_) {
       track_object.getStartsAndEnds(block_active);
+      //track_object.print();
     }
   }
 
@@ -73,11 +74,8 @@ class ObjectModifier : public FunctionalAtomicProcess {
     // Find the highest audioTrackUID number
     uint32_t max_atu_id = getMaxUidId();
 
-    std::cout << "makeNewObjects: " << max_ao_id << " " << max_atu_id << std::endl;
-
     for (auto track_object : track_objects_) {
-      std::cout << "makeNewObjects: startSize=" << track_object.startSize() << " : ";
-      track_object.print();
+      //track_object.print();
       // Deal with existing object and new start and duration times
       for (auto &ao : adm_->getElements<AudioObject>()) {
         if (track_object.checkObjectMatch(ao)) {

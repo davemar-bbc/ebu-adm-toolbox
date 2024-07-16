@@ -317,7 +317,7 @@ void BlockObject::getNewTimes(std::shared_ptr<AudioObject> ao, std::vector<Track
     new_end_ = ao->get<Duration>().get().asNanoseconds() + new_start_;
   }
 
-  track_object_m.print();
+  //track_object_m.print();
 
   remove_ = track_object_m.getRemove();
 }

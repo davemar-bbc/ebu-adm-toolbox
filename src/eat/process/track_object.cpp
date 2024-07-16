@@ -15,7 +15,7 @@ TrackObject::TrackObject() {
   remove_ = false; 
   prod_prof_limits_.obj_min_gap_ns = 1000e6;
   prod_prof_limits_.obj_pre_gap_ns = 20e6;
-  prod_prof_limits_.obj_post_gap_ns = 20e6;
+  prod_prof_limits_.obj_post_gap_ns =  20e6;
   prod_prof_limits_.obj_min_dur_ns = 100e6;
   prod_prof_limits_.obj_max_gap_ns = 5000e6;
 }
@@ -50,8 +50,11 @@ void TrackObject::getAdmInfo(std::shared_ptr<const AudioObject> ao,
 void TrackObject::print() {
   std::cout << "trackObject: ";
   std::cout << audio_object_id_ << " ";
-  std::cout << starts_[0].count() / 1e9 << " ";
-  std::cout << ends_[0].count() / 1e9 << " ";
+  for (uint32_t i = 0; i < starts_.size(); i++) {
+    std::cout << starts_[i].count() / 1e6 << "/";
+    std::cout << ends_[i].count() / 1e6 << " ";
+  }
+  std::cout << "| ";
   for (auto ti : track_info_) {
     std::cout << ti.track_index << " ";
     std::cout << ti.audio_track_uid << " ";
@@ -65,14 +68,11 @@ bool TrackObject::findStart(uint32_t &i, int64_t &new_start, BlockActive block_a
   bool start_found = false;
   do {
     uint32_t start_tot = 0;
-    //std::cout << "start: " << i << ": ";
     for (auto ti : track_info_) {
-      //std::cout << block_active.active[i][ti.track_index];
       if (block_active.active[i][ti.track_index]) {
         start_tot++;
       }
     }
-    //std::cout << " = " << start_tot << std::endl;
     i++;
     if (start_tot > 0) {
       new_start = block_active.block_times[i - 1];
@@ -187,29 +187,7 @@ void TrackObject::getStartsAndEnds(BlockActive block_active) {
   }
   assert(new_ends.size() == new_starts.size());  // Just to make sure they are the same!
 
-  std::cout << "A: new_start: ";
-  for (auto new_start : new_starts) {
-    std::cout << new_start << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "A: new_end: ";
-  for (auto new_end : new_ends) {
-    std::cout << new_end << " ";
-  }
-  std::cout << std::endl;
-
   mergeCloseObjects(new_starts, new_ends, prod_prof_limits_.obj_min_gap_ns);
-
-  std::cout << "B: new_start: ";
-  for (auto new_start : new_starts) {
-    std::cout << new_start << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "B: new_end: ";
-  for (auto new_end : new_ends) {
-    std::cout << new_end << " ";
-  }
-  std::cout << std::endl;
 
   for (auto new_start : new_starts) {
     addNewStart(new_start);
@@ -217,17 +195,21 @@ void TrackObject::getStartsAndEnds(BlockActive block_active) {
   for (auto new_end : new_ends) {
     addNewEnd(new_end);
   }
+
+  // Ensure starts and ends aren't beyond the orignal audioObject
+  if (starts_[1] < starts_[0]) starts_[1] = starts_[0];
+  if (ends_.back() > ends_[0]) ends_.back() = ends_[0];
 }
 
 
 void TrackObject::mergeCloseObjects(std::vector<int64_t> &new_starts, 
                                     std::vector<int64_t> &new_ends, int64_t min_gap_ns) {
   uint32_t j = 0;
+  // Double loop as more than 2 objects might need merging into 1.
   while (j < new_starts.size() - 1) {
-    std::cout << "ne: " << new_ends[j] << ", ns: " << new_starts[j + 1] << " / ";
     while (j < new_starts.size() - 1) {
+      // If objects within min gap, then merge start and ends
       if (new_ends[j] + min_gap_ns > new_starts[j + 1]) {
-        std::cout << "X ";
         new_ends[j] = new_ends[j + 1];
         new_ends.erase(new_ends.begin() + j + 1);
         new_starts.erase(new_starts.begin() + j + 1);
@@ -235,7 +217,6 @@ void TrackObject::mergeCloseObjects(std::vector<int64_t> &new_starts,
     }
     j++;
   }
-  std::cout << std::endl;
 }
 
 }  // namespace eat::process
