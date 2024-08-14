@@ -7,6 +7,8 @@
 // work around https://github.com/ebu/libbw64/issues/36
 #include <memory>
 
+#include <iostream>
+
 namespace eat::process {
 
 template <typename T>
@@ -59,24 +61,30 @@ bw64::ChnaChunk make_chna(const adm::Document &document, const channel_map_t &ch
   for (auto &id : document.getElements<adm::AudioTrackUid>()) {
     if (id->isSilent()) continue;
 
-    uint16_t trackIndex = channel_map.at(id->get<adm::AudioTrackUidId>());
-    std::string uid = adm::formatId(id->get<adm::AudioTrackUidId>());
-
-    std::string trackRef;
-    if (id->getReference<adm::AudioTrackFormat>())
-      trackRef = adm::formatId(id->getReference<adm::AudioTrackFormat>()->get<adm::AudioTrackFormatId>());
-    else if (id->getReference<adm::AudioChannelFormat>())
-      trackRef = adm::formatId(id->getReference<adm::AudioChannelFormat>()->get<adm::AudioChannelFormatId>()) + "_00";
-    else
+    if (channel_map.count(id->get<adm::AudioTrackUidId>()) == 0) {
       throw std::runtime_error(
-          "when making CHNA chunk, found audioTrackUID without "
-          "audioChannelFormat or audioTrackFormat reference");
+        "when making CHNA chunk, found audioTrackUID without any reference to it: " +
+        adm::formatId(id->get<adm::AudioTrackUidId>()));
+    } else {
+      uint16_t trackIndex = channel_map.at(id->get<adm::AudioTrackUidId>());
+      std::string uid = adm::formatId(id->get<adm::AudioTrackUidId>());
 
-    if (!id->getReference<adm::AudioPackFormat>())
-      throw std::runtime_error("when making CHNA chunk, found audioTrackUID without audioPackFormat reference");
-    std::string packRef = adm::formatId(id->getReference<adm::AudioPackFormat>()->get<adm::AudioPackFormatId>());
+      std::string trackRef;
+      if (id->getReference<adm::AudioTrackFormat>())
+        trackRef = adm::formatId(id->getReference<adm::AudioTrackFormat>()->get<adm::AudioTrackFormatId>());
+      else if (id->getReference<adm::AudioChannelFormat>())
+        trackRef = adm::formatId(id->getReference<adm::AudioChannelFormat>()->get<adm::AudioChannelFormatId>()) + "_00";
+      else
+        throw std::runtime_error(
+            "when making CHNA chunk, found audioTrackUID without "
+            "audioChannelFormat or audioTrackFormat reference");
 
-    audio_ids.emplace_back(trackIndex + 1, uid, trackRef, packRef);
+      if (!id->getReference<adm::AudioPackFormat>())
+        throw std::runtime_error("when making CHNA chunk, found audioTrackUID without audioPackFormat reference");
+      std::string packRef = adm::formatId(id->getReference<adm::AudioPackFormat>()->get<adm::AudioPackFormatId>());
+
+      audio_ids.emplace_back(trackIndex + 1, uid, trackRef, packRef);
+    }
   }
 
   return {audio_ids};

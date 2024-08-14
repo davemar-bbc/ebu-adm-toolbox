@@ -14,6 +14,7 @@ using namespace adm;
 namespace eat::process {
 
 void BlockModify::modifyBlocks(uint64_t file_length_ns) {
+  (void)file_length_ns;
   // TODO:
   // * Need to look at how some parameters (e.g. position) might need interpolation after the block's size has changed.
 

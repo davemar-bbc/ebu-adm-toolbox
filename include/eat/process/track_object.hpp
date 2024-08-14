@@ -17,11 +17,12 @@ struct TrackInfo {
 };
 
 struct ProdProfLimits {
-  int64_t obj_min_gap_ns;
-  int64_t obj_pre_gap_ns;
-  int64_t obj_post_gap_ns;
-  int64_t obj_min_dur_ns;
-  int64_t obj_max_gap_ns;
+  int64_t obj_min_gap_ns;   // Minimum gap between objects that can be combined
+  int64_t obj_lead_in_ns;   // Minimum lead in time
+  int64_t obj_lead_out_ns;  // Minimum lead out time
+  int64_t obj_min_dur_ns;   // Minimum object duration
+  int64_t obj_max_gap_ns;   // Maximum duration of silence in object
+  bool crop_objs;           // Enforce cropping of objects so they aren't longer than original
 };
 
 class TrackObject {

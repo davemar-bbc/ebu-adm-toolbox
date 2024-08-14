@@ -106,7 +106,7 @@ class TriggerRead : public StreamingAtomicProcess {
   
   void process() override {
     if (in_trigger->available()) {
-      auto trigger = in_trigger->pop();
+      (void)in_trigger->pop();
       auto now = std::chrono::system_clock::now() - beginning;
       std::cout << "TriggerRead::process trigger: " << now.count() / 1e6 << std::endl;
     }

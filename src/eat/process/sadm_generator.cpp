@@ -77,7 +77,7 @@ class SadmGenerator : public StreamingAtomicProcess {
 
   void process() override {
     if (in_trigger->available()) {
-      auto trigger = in_trigger->pop();
+      (void)in_trigger->pop();
       auto now1 = std::chrono::system_clock::now() - beginning;
       threader->trigger();
       auto now2 = std::chrono::system_clock::now() - beginning;

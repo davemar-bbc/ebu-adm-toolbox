@@ -14,10 +14,11 @@ namespace eat::process {
 TrackObject::TrackObject() {
   remove_ = false; 
   prod_prof_limits_.obj_min_gap_ns = 1000e6;
-  prod_prof_limits_.obj_pre_gap_ns = 20e6;
-  prod_prof_limits_.obj_post_gap_ns =  20e6;
+  prod_prof_limits_.obj_lead_in_ns = 20e6;
+  prod_prof_limits_.obj_lead_out_ns =  20e6;
   prod_prof_limits_.obj_min_dur_ns = 100e6;
   prod_prof_limits_.obj_max_gap_ns = 5000e6;
+  prod_prof_limits_.crop_objs = true;
 }
 
 
@@ -151,7 +152,7 @@ void TrackObject::getStartsAndEnds(BlockActive block_active) {
     bool start_found = findStart(i, new_start, block_active);
 
     // Move the start back by 20ms
-    new_start -= prod_prof_limits_.obj_pre_gap_ns;
+    new_start -= prod_prof_limits_.obj_lead_in_ns;
     if (new_start < 0) new_start = 0;
 
     // Find end
@@ -161,7 +162,7 @@ void TrackObject::getStartsAndEnds(BlockActive block_active) {
     }
 
     // Move the end forward by 20ms
-    new_end += prod_prof_limits_.obj_post_gap_ns;
+    new_end += prod_prof_limits_.obj_lead_out_ns;
 
     // Make the duration at least 100ms
     if (new_end - new_start < prod_prof_limits_.obj_min_dur_ns) {
@@ -197,8 +198,10 @@ void TrackObject::getStartsAndEnds(BlockActive block_active) {
   }
 
   // Ensure starts and ends aren't beyond the orignal audioObject
-  if (starts_[1] < starts_[0]) starts_[1] = starts_[0];
-  if (ends_.back() > ends_[0]) ends_.back() = ends_[0];
+  if (prod_prof_limits_.crop_objs) {
+    if (starts_[1] < starts_[0]) starts_[1] = starts_[0];
+    if (ends_.back() > ends_[0]) ends_.back() = ends_[0];
+  }
 }
 
 
