@@ -420,5 +420,22 @@ The following process types are available:
 
    set missing audioContent dialogue values to mixed
 
-   :input data<admdata> in_axml: input adm data
-   :output data<admdata> out_axml: output adm data
+   :input Data<ADMData> in_axml: input adm data
+   :output Data<ADMData> out_axml: output adm data
+
+.. process:process:: track_analyser
+
+   Detect if the audio tracks have silent frames. This can the used for 
+   reducing durations of audioObjects
+
+   :input Stream<InterleavedBlockPtr> in_samples: input samples
+   :output Data<BlockActive> out_blocks: output active blocks
+
+.. process:process:: object_modifier
+
+   Modify the start and duration of audioObjects so they are as only as long as 
+   the active audio in them.
+
+   :input Data<ADMData> in_axml: input ADM data
+   :input Data<BlockActive> in_blocks: input active blocks
+   :output Data<ADMData> out_axml: output ADM data

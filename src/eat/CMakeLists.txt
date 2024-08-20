@@ -68,6 +68,8 @@ if(EAT_BUILD_TESTS)
             process/limit_interaction.test.cpp
             process/time_utils.test.cpp
             process/validate.test.cpp
+            process/object_modifier.test.cpp
+            process/track_analyser.test.cpp
             render/pack_allocation.test.cpp
             render/rendering_items.test.cpp
             render/render.test.cpp

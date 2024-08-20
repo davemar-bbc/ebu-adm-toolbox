@@ -5,13 +5,14 @@
 
 using namespace bw64;
 
+namespace eat::process {
+
 struct BlockActive {
   std::vector<std::vector<bool>> active;  // 2D vector of activity flags
   std::vector<int64_t> block_times;      // vector of block times
   uint64_t file_length_ns;
 };
 
-namespace eat::process {
 /// a process which measures the loudness of input samples
 /// - in_samples (StreamPort<InterleavedBlockPtr>) : input samples
 /// - out_block_active (DataPort<BlockActive>) : block info
