@@ -3,6 +3,8 @@
 #include <adm/document.hpp>
 #include <cassert>
 
+#include <iostream>
+
 #include "eat/utilities/unwrap_named.hpp"
 #include "eat/utilities/unwrap_shared.hpp"
 
@@ -75,6 +77,13 @@ std::shared_ptr<Visitable> make_visitable(T &&value, std::string description) {
     return true;                                                         \
   }
 
+#define HANDLE_ELEMENT(name, type)                                       \
+  if (desc == #name) {                                                   \
+    auto element = ref().getElement<type>();                             \
+    if (element != nullptr) { cb(make_visitable(element)); }             \
+    return true;                                                         \
+  }
+
 #define HANDLE_REFERENCES(name, type)                                      \
   if (desc == #name) {                                                     \
     for (auto &ref : ref().getReferences<type>()) cb(make_visitable(ref)); \
@@ -120,7 +129,8 @@ bool VisitableImpl<std::shared_ptr<Document>>::visit(const std::string &desc,
   HANDLE_ELEMENTS(audioStreamFormat, AudioStreamFormat);
   HANDLE_ELEMENTS(audioTrackFormat, AudioTrackFormat);
   HANDLE_ELEMENTS(audioTrackUid, AudioTrackUid);
-
+  HANDLE_ELEMENT(tagList, TagList);
+  HANDLE_ELEMENT(profileList, ProfileList);
   HANDLE_ATTRIBUTE(version, Version);
   return false;
 }
@@ -289,6 +299,16 @@ std::string VisitableImpl<AudioBlockFormatObjects>::get_description() {
 }
 
 template <>
+std::string VisitableImpl<std::shared_ptr<TagList>>::get_description() {
+  return "tagList";
+}
+
+template <>
+std::string VisitableImpl<std::shared_ptr<TagGroup>>::get_description() {
+  return "tagGroup";
+}
+
+template <>
 bool VisitableImpl<Label>::visit(const std::string &desc, const std::function<void(VisitablePtr)> &cb) {
   HANDLE_ATTRIBUTE(value, LabelValue);
   HANDLE_ATTRIBUTE(language, LabelLanguage);
@@ -300,6 +320,30 @@ bool VisitableImpl<AudioComplementaryObjectGroupLabel>::visit(const std::string 
                                                               const std::function<void(VisitablePtr)> &cb) {
   HANDLE_ATTRIBUTE(value, LabelValue);
   HANDLE_ATTRIBUTE(language, LabelLanguage);
+  return false;
+}
+
+template <>
+bool VisitableImpl<std::shared_ptr<TagList>>::visit(const std::string &desc,
+                                  const std::function<void(VisitablePtr)> &cb) {
+  if (desc == "tagGroup") {
+    for (auto &element : ref().get<adm::TagGroups>()) {
+      cb(make_visitable(std::make_shared<TagGroup>(element)));
+    }
+    return true;
+  }
+  return false;
+}
+
+template <>
+bool VisitableImpl<std::shared_ptr<TagGroup>>::visit(const std::string &desc,
+                                  const std::function<void(VisitablePtr)> &cb) {
+  if (desc == "tag") {
+    for (auto &element : ref().get<adm::TTags>()) {
+      cb(make_visitable(std::make_shared<TTag>(element)));
+    }
+    return true;
+  }
   return false;
 }
 
@@ -326,11 +370,11 @@ void visit_impl(const VisitablePtr &el, const std::vector<std::string> &desc, si
 
   if (idx < desc.size()) {
     bool res = el->visit(desc[idx], [&](const VisitablePtr &sub_el) { visit_impl(sub_el, desc, idx + 1, path, cb); });
-    if (!res)
+    if (!res) {
       throw std::runtime_error("path element '" + desc[idx] + "' is not visitable from " + el->get_description() +
                                " element");
-  } else
-    cb(path);
+    }
+  } else cb(path);
 
   path.pop_back();
 }

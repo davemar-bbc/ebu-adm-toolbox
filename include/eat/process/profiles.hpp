@@ -16,7 +16,12 @@ struct ITUEmissionProfile {
   int level_;
 };
 
+struct EBUProductionProfile {
+ public:
+  EBUProductionProfile() {}
+};
+
 /// represents some known profile, used to select behaviours for different
 /// profiles, for example when validating or conforming files
-using Profile = std::variant<ITUEmissionProfile>;
+using Profile = std::variant<ITUEmissionProfile, EBUProductionProfile>;
 }  // namespace eat::process::profiles

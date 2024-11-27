@@ -21,6 +21,13 @@ struct ToAdmProfile {
                         adm::ProfileName{"AdvSS Emission ADM and S-ADM Profile"}, adm::ProfileVersion{"1"},
                         adm::ProfileLevel{std::to_string(p.level())}};
   }
+
+  adm::Profile operator()(profiles::EBUProductionProfile &p) {
+    (void)p;
+    return adm::Profile{adm::ProfileValue{"EBU Tech XXXX"},
+                        adm::ProfileName{"EBU Production Profile"}, adm::ProfileVersion{"1"},
+                        adm::ProfileLevel{std::to_string(0)}};
+  }
 };
 
 class SetProfiles : public FunctionalAtomicProcess {

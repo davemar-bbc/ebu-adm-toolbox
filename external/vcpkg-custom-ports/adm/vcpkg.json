@@ -1,7 +1,7 @@
 {
   "name": "adm",
   "version-string": "0.14.0",
-  "homepage": "https://github.com/ebu/libadm",
+  "homepage": "https://github.com/davemar-bbc/libadm",
   "description": "ITU-R BS.2076 Library",
   "dependencies": [
     "vcpkg-cmake",

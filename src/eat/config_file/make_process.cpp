@@ -152,6 +152,8 @@ process::profiles::Profile parse_profile(nlohmann::json &config) {
   if (type_str == "itu_emission") {
     int level = get<int>(config, "level");
     return process::profiles::ITUEmissionProfile{level};
+  } else if (type_str == "ebu_production") {
+    return process::profiles::EBUProductionProfile{};
   }
 
   throw std::runtime_error{"unknown profile type " + type_str};

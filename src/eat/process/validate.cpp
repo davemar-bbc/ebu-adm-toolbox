@@ -1,5 +1,7 @@
 #include "eat/process/validate.hpp"
 
+#include <iostream>
+
 namespace ev = eat::utilities::element_visitor;
 
 namespace eat::process::validation {
@@ -65,6 +67,27 @@ std::vector<ObjectContentOrNested::Message> ObjectContentOrNested::run(const ADM
       if (content) messages.push_back({element->get<adm::AudioObjectId>(), true});
     } else {
       if (!content) messages.push_back({element->get<adm::AudioObjectId>(), false});
+    }
+  }
+
+  return messages;
+}
+
+std::vector<ValidStreamFormat::Message> ValidStreamFormat::run(const ADMData &adm) const {
+  std::vector<Message> messages;
+  auto elements = adm.document.read()->getElements<adm::AudioStreamFormat>();
+
+  for (auto &&element : elements) {
+    // Having both these referenced is invalid
+    auto apf = element->getReference<adm::AudioPackFormat>();
+    auto acf = element->getReference<adm::AudioChannelFormat>();
+    bool invalid = false;
+    if (apf && acf) {
+      invalid = true;
+    }
+
+    if (invalid) {
+      messages.push_back({element->get<adm::AudioStreamFormatId>()});
     }
   }
 
@@ -141,6 +164,15 @@ struct FormatVisitor {
     return adm::formatId(m.object_id) + " has " + (m.both ? "both" : "neither");
   }
 
+  std::string operator()(const ValidStreamFormat &) {
+    return "audioStreamFormat must NOT have both audioPackForamtIdRef and audioTrackFormatIdRef elements";
+  }
+
+  std::string operator()(const ValidStreamFormatMessage &m) {
+    return adm::formatId(m.stream_id) + " has both audioPackForamtIdRef and audioTrackFormatIdRef elements";
+  }
+
+
   std::string operator()(const StringLength &c) {
     return ev::dotted_path(c.path) + " must be " + c.range.format() + " characters long";
   }
@@ -157,7 +189,7 @@ struct FormatVisitor {
 
   std::string operator()(const ElementPresent &c) {
     return format_ev_dotted_path(c.path) + " " + (c.present ? "must" : "must not") + " have " + c.element +
-           " attributes";
+           " attributes/elements";
   }
 
   std::string operator()(const ElementPresentMessage &m) {
@@ -360,10 +392,48 @@ ProfileValidator make_emission_profile_validator(int level) {
   return {checks};
 }
 
+ProfileValidator make_production_profile_validator() {
+  std::vector<Check> checks;
+
+  // Check for bad Atmos style audioStreamFormats
+  checks.push_back(ValidStreamFormat{});
+
+  // Maximum quantity for elements (Section 2.1)
+  checks.push_back(NumElements{{}, "audioProgramme", CountRange::between(1, 32), "elements"});
+  checks.push_back(NumElements{{}, "audioContent", CountRange::between(1, 128), "elements"});
+  checks.push_back(NumElements{{}, "audioPackFormat", CountRange::between(1, 256), "elements"});
+  checks.push_back(NumElements{{}, "audioChannelFormat", CountRange::between(1, 1024), "elements"});
+  checks.push_back(NumElements{{}, "audioTrackUid", CountRange::between(1, 1024), "elements"});
+
+  // audioProgramme rules (Section 2.2.1)
+  checks.push_back(NumElements{{"audioProgramme"}, "label", CountRange::up_to(16), "elements"});
+  checks.push_back(NumElements{{"audioProgramme"}, "audioContent", CountRange::between(0, 64), "references"});
+
+  // audioTrackUID rules
+  checks.push_back(NumElements{{"audioTrackUid"}, "audioPackFormat", CountRange::exactly(1), "references"});
+  checks.push_back(NumElements{{"audioTrackUid"}, "audioChannelFormat", CountRange::exactly(1), "references"});
+  checks.push_back(NumElements{{"audioTrackUid"}, "audioTrackFormat", CountRange::exactly(0), "references"});
+
+  //checks.push_back(ElementPresent{{"audioContent"}, "dialogue", true});
+
+  // tagList and profileList presence 
+  checks.push_back(ElementPresent{{}, "tagList", true});
+  checks.push_back(NumElements{{"tagList"}, "tagGroup", CountRange::between(1, 7), "elements"});
+  checks.push_back(ElementPresent{{"tagList", "tagGroup"}, "tag", true});
+  checks.push_back(ElementPresent{{}, "profileList", true});
+
+  return {checks};
+}
+
 namespace {
 struct MakeValidatorVisitor {
   ProfileValidator operator()(const profiles::ITUEmissionProfile &p) {
     return make_emission_profile_validator(p.level());
+  }
+   
+  ProfileValidator operator()(const profiles::EBUProductionProfile &p) {
+    (void)p;
+    return make_production_profile_validator();
   }
 };
 }  // namespace
