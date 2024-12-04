@@ -132,6 +132,7 @@ bool VisitableImpl<std::shared_ptr<Document>>::visit(const std::string &desc,
   HANDLE_ELEMENT(tagList, TagList);
   HANDLE_ELEMENT(profileList, ProfileList);
   HANDLE_ATTRIBUTE(version, Version);
+
   return false;
 }
 
@@ -309,6 +310,21 @@ std::string VisitableImpl<std::shared_ptr<TagGroup>>::get_description() {
 }
 
 template <>
+std::string VisitableImpl<std::shared_ptr<ProfileList>>::get_description() {
+  return "profileList";
+}
+
+template <>
+std::string VisitableImpl<std::shared_ptr<Profile>>::get_description() {
+  return "profile";
+}
+
+template <>
+std::string VisitableImpl<std::shared_ptr<ProfileValue>>::get_description() {
+  return "profileValue";
+}
+
+template <>
 bool VisitableImpl<Label>::visit(const std::string &desc, const std::function<void(VisitablePtr)> &cb) {
   HANDLE_ATTRIBUTE(value, LabelValue);
   HANDLE_ATTRIBUTE(language, LabelLanguage);
@@ -343,6 +359,30 @@ bool VisitableImpl<std::shared_ptr<TagGroup>>::visit(const std::string &desc,
       cb(make_visitable(std::make_shared<TTag>(element)));
     }
     return true;
+  }
+  return false;
+}
+
+template <>
+bool VisitableImpl<std::shared_ptr<ProfileList>>::visit(const std::string &desc,
+                                  const std::function<void(VisitablePtr)> &cb) {
+  if (desc == "profile") {
+    for (auto &element : ref().get<adm::Profiles>()) {
+      cb(make_visitable(std::make_shared<Profile>(element)));
+    }
+    return true;
+  }
+  return false;
+}
+
+template <>
+bool VisitableImpl<std::shared_ptr<Profile>>::visit(const std::string &desc,
+                                  const std::function<void(VisitablePtr)> &cb) {
+  if (desc == "profileValue") {
+    if (ref().has<adm::ProfileValue>()) {
+      cb(make_visitable(unwrap_named(ref().template get<ProfileValue>()), "profileValue"));
+      return true;
+    }
   }
   return false;
 }

@@ -414,13 +414,18 @@ ProfileValidator make_production_profile_validator() {
   checks.push_back(NumElements{{"audioTrackUid"}, "audioChannelFormat", CountRange::exactly(1), "references"});
   checks.push_back(NumElements{{"audioTrackUid"}, "audioTrackFormat", CountRange::exactly(0), "references"});
 
-  //checks.push_back(ElementPresent{{"audioContent"}, "dialogue", true});
+  checks.push_back(ElementPresent{{"audioContent"}, "dialogue", true});
 
   // tagList and profileList presence 
   checks.push_back(ElementPresent{{}, "tagList", true});
-  checks.push_back(NumElements{{"tagList"}, "tagGroup", CountRange::between(1, 7), "elements"});
+  checks.push_back(NumElements{{"tagList"}, "tagGroup", CountRange::between(1, 6), "elements"});
   checks.push_back(ElementPresent{{"tagList", "tagGroup"}, "tag", true});
+
+  checks.push_back(ElementInList<std::string>{{"version"}, {"ITU-R_BS.2076-3"}});
+
   checks.push_back(ElementPresent{{}, "profileList", true});
+  checks.push_back(NumElements{{"profileList"}, "profile", CountRange::at_least(1), "elements"});
+  checks.push_back(ElementInList<std::string>{{"profileList", "profile", "profileValue"}, {"EBU Tech XXXX"}});
 
   return {checks};
 }
