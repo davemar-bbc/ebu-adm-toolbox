@@ -13,6 +13,7 @@
 #include "eat/process/remove_unused.hpp"
 #include "eat/process/validate_process.hpp"
 #include "eat/render/render.hpp"
+#include "eat/render/hoa_encoder.hpp"
 #include "eat/utilities/parse_id_variant.hpp"
 #include "make_graph.hpp"
 #include "utilities.hpp"
@@ -255,6 +256,13 @@ framework::ProcessPtr make_limit_interaction(nlohmann::json &config, const std::
   return std::make_shared<process::InteractionLimiter>(name, limiter_config);
 }
 
+framework::ProcessPtr make_hoa_encoder(nlohmann::json &config, const std::string &name) {
+  size_t hoa_order = get<size_t>(config, "hoa_order");
+  size_t block_size = get<size_t>(config, "block_size", 1024);
+
+  return render::make_hoa_encoder(name, hoa_order, block_size);
+}
+
 }  // namespace
 
 framework::ProcessPtr make_process(nlohmann::json &config) {
@@ -293,6 +301,7 @@ framework::ProcessPtr make_process(nlohmann::json &config) {
       {"set_version", &make_set_version},
       {"set_content_dialogue_default", make_process_no_args(&process::make_set_content_dialogue_default)},
       {"limit_interaction", &make_limit_interaction},
+      {"hoa_encoder", &make_hoa_encoder},
   }};
 
   std::string type = get<std::string>(config, "type");

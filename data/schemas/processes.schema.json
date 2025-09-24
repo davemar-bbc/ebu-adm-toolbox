@@ -36,6 +36,9 @@
     },
     {
       "$ref": "parameterless_processes.schema.json"
+    },
+    {
+      "$ref": "hoa_order_process.schema.json"
     }
   ]
 }

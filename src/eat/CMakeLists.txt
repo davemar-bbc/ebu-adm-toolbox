@@ -30,6 +30,7 @@ target_sources(
           render/rendering_items.cpp
           render/rendering_items_options_by_id.cpp
           render/render.cpp
+          render/hoa_encoder.cpp
           utilities/check_samples.cpp
           utilities/element_visitor.cpp
           utilities/to_dot.cpp

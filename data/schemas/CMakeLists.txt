@@ -17,7 +17,8 @@ list(
   set_profiles.schema.json
   set_programme_loudness.schema.json
   set_version.schema.json
-  validate.schema.json)
+  validate.schema.json
+  hoa_order_process.schema.json)
 set(config_src_dir "${PROJECT_BINARY_DIR}/src/eat/config_file/schemas")
 foreach(schema ${schemas})
   string(REGEX REPLACE "\\..*" "" schema_path ${schema})

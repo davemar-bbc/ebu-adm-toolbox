@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Processes that use an hoa_order",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "hoa_encoder"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "hoa_order": {
+          "description": "An HOA order",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
