@@ -23,11 +23,6 @@ namespace eat::process {
 
 /// 
 /// ports:
-/// - in_sadm (StreamPort<std::string>) : input S-ADM frame
-framework::ProcessPtr make_sadm_output(const std::string &name);
-
-/// 
-/// ports:
 /// - out_sadm (StreamPort<std::string>) : output S-ADM frame
 framework::ProcessPtr make_sadm_generator(const std::string &name, const Config config_);
 

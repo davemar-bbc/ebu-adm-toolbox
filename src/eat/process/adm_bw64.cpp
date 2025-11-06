@@ -177,6 +177,40 @@ class ADMWavReader : public CompositeProcess {
   }
 };
 
+
+class WavLength : public FunctionalAtomicProcess {
+ public:
+  WavLength(const std::string &name, const std::string &path_)
+      : FunctionalAtomicProcess(name),
+        path(path_),
+        out_length(add_out_port<DataPort<uint64_t>>("out_length")) {}
+
+  void process() override {
+    file = bw64::readFile(path);
+    uint64_t tot_frames = 0;
+    size_t block_size = 1024;
+    std::vector<float> buffer(block_size * file->channels());
+  
+    while (true) {
+      size_t n_frames = file->read(buffer.data(), block_size);
+      tot_frames += static_cast<uint64_t>(n_frames);
+      if (n_frames == 0) break;
+    }
+
+    // Convert to nanoseconds
+    out_length->set_value(tot_frames * 1000000000L / static_cast<uint64_t>(file->sampleRate()));
+
+    file.reset();
+  }
+
+ private:
+  std::string path;
+  DataPortPtr<uint64_t> out_length;
+
+  std::shared_ptr<bw64::Bw64Reader> file;
+};
+
+
 }  // namespace
 
 namespace eat::process {
@@ -199,6 +233,10 @@ ProcessPtr make_read_adm_bw64(const std::string &name, const std::string &path, 
 
 ProcessPtr make_write_adm_bw64(const std::string &name, const std::string &path) {
   return std::make_shared<ADMWavWriter>(name, path);
+}
+
+ProcessPtr make_wav_length(const std::string &name, const std::string &path) {
+  return std::make_shared<WavLength>(name, path);
 }
 
 }  // namespace eat::process

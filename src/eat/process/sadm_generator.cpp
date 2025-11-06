@@ -11,52 +11,11 @@
 #include "eat/process/sadm_generator.hpp"
 
 #include "eat/process/adm_bw64.hpp"
+#include "eat/process/block.hpp"
 
 using namespace eat::framework;
 
 namespace eat::process {
-
-class SadmOutput : public StreamingAtomicProcess {
- public:
-  SadmOutput(const std::string &name)
-      : StreamingAtomicProcess(name),
-        in_sadm(add_in_port<StreamPort<std::string>>("in_sadm")) {}
-    
-  void initialise() override { 
-    frame_number = 0;
-  }
-  
-  void process() override {
-    if (in_sadm->available()) {
-      auto str_in = in_sadm->pop();
-      std::cout << "SadmOutput::process: " << std::endl;
-      writeSadmXml(str_in, frame_number);
-      frame_number++;
-    }
-  }
-  
-  void finalise() override {
-  }  
-
-  void writeSadmXml(std::string sadm_xml, uint64_t frame_number_) {
-    char fname[100];
-    snprintf(fname, sizeof(fname), "/tmp/tmp_sadm_%05llu.xml", frame_number_);
-    std::ofstream opfile;
-    opfile.open(fname);
-    opfile << sadm_xml;
-    opfile.close();
-  }
-
- private:
-  StreamPortPtr<std::string> in_sadm;
-  uint64_t frame_number;
-};
-
-ProcessPtr make_sadm_output(const std::string &name) {
-  return std::make_shared<SadmOutput>(name); 
-}
-
-// ----------------------------------------------------------------------------
 
 class SadmGenerator : public StreamingAtomicProcess {
  public:

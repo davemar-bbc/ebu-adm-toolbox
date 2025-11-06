@@ -10,6 +10,7 @@
 
 #include <eat/process/adm_bw64.hpp>
 #include "eat/process/sadm_generator.hpp"
+#include "eat/process/sadm_io.hpp"
 #ifdef APLAY
 #include "eat/process/audio_playback.hpp"
 #else

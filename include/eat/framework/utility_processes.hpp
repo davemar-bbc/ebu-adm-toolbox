@@ -82,4 +82,24 @@ class NullSink : public FunctionalAtomicProcess {
   DataPortPtr<T> in;
 };
 
+/// streaming process with an input port whose value is discarded
+///
+/// ports:
+/// - in (`StreamPort<T>`) : input data to discard
+template <typename T>
+class StreamingNullSink : public StreamingAtomicProcess {
+ public:
+  StreamingNullSink(const std::string &name) : StreamingAtomicProcess(name), in(add_in_port<StreamPort<T>>("in")) {}
+
+  void process() override {
+    while (in->available()) {
+      auto value = in->pop().read();
+      (void)value;
+    }
+  }
+
+ private:
+  StreamPortPtr<T> in;
+};
+
 }  // namespace eat::framework

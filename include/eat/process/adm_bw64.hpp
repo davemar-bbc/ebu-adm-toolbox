@@ -60,6 +60,14 @@ framework::ProcessPtr make_read_adm_bw64(const std::string &name, const std::str
 /// @param path path to the file to read
 framework::ProcessPtr make_write_adm_bw64(const std::string &name, const std::string &path);
 
+/// write samples and ADM data to a BW64 file
+///
+/// ports:
+/// - out_length (DataPort<uin64_t>) : file length in ns
+///
+/// @param path path to the file to read
+framework::ProcessPtr make_wav_length(const std::string &name, const std::string &path);
+
 }  // namespace eat::process
 
 namespace eat::framework {

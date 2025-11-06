@@ -195,6 +195,9 @@ if(EAT_BUILD)
     add_executable(object_chop)
     target_link_libraries(object_chop PRIVATE EBU::eat)
 
+    add_executable(bw64_to_sadm)
+    target_link_libraries(bw64_to_sadm PRIVATE EBU::eat)
+
     add_subdirectory(src/examples)
   endif()
 endif()
