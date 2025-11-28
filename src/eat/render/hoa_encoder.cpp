@@ -13,72 +13,13 @@
 #include "eat/process/adm_bw64.hpp"
 #include "eat/process/block.hpp"
 #include "eat/render/rendering_items.hpp"
+#include "eat/render/render.hpp"
 
 using namespace eat::framework;
 using namespace eat::process;
 using namespace eat::render;
 
 namespace {
-
-class Buffer {
- public:
-  Buffer() {}
-  Buffer(const Buffer &) = delete;
-  Buffer(Buffer &&) = default;
-  Buffer(size_t n_channels_, size_t n_samples_) { resize(n_channels_, n_samples_); }
-
-  float *const *ptrs() { return pointers.data(); }
-
-  float *channel_ptr(size_t i) { return pointers.at(i); }
-
-  void zero() {
-    for (size_t i = 0; i < samples.size(); i++) samples[i] = 0.0f;
-  }
-
-  void add(Buffer &other) {
-    for (size_t i = 0; i < samples.size(); i++) samples[i] += other.samples[i];
-  }
-
-  void resize(size_t n_channels_, size_t n_samples_) {
-    if (n_channels_ != n_channels || n_samples_ != n_samples) {
-      n_channels = n_channels_;
-      n_samples = n_samples_;
-
-      samples.resize(n_samples * n_channels);
-      pointers.resize(n_channels);
-      for (size_t channel_i = 0; channel_i < n_channels; channel_i++)
-        pointers[channel_i] = samples.data() + channel_i * n_samples;
-    }
-  }
-
-  void from_interleaved(const InterleavedSampleBlock &b) {
-    auto &info = b.info();
-    resize(info.channel_count, info.sample_count);
-
-    for (size_t channel_i = 0; channel_i < n_channels; channel_i++)
-      for (size_t sample_i = 0; sample_i < n_samples; sample_i++)
-        pointers[channel_i][sample_i] = b.sample(channel_i, sample_i);
-  }
-
-  InterleavedSampleBlock to_interleaved(unsigned int sample_rate, size_t start = 0) {
-    assert(start < n_samples);
-    BlockDescription info{n_samples - start, pointers.size(), sample_rate};
-
-    InterleavedSampleBlock block{info};
-
-    for (size_t channel_i = 0; channel_i < n_channels; channel_i++)
-      for (size_t sample_i = 0; sample_i < info.sample_count; sample_i++)
-        block.sample(channel_i, sample_i) = pointers[channel_i][start + sample_i];
-
-    return block;
-  }
-
- private:
-  size_t n_channels = 0;
-  size_t n_samples = 0;
-  std::vector<float> samples;
-  std::vector<float *> pointers;
-};
 
 size_t hoa_channels[3] = {1, 4, 9};
 
@@ -104,46 +45,6 @@ void write_non_lfe(float *const *out, const float *const *in, size_t n_channels_
   }
   always_assert(in_channel == n_channels_in, "more LFE channels than expected");
 }
-
-// like the rendering items track specs, but specialised for rendering with channel number s rather than track uid
-// references
-struct RenderDirectTrackSpec {
-  size_t track_idx;
-};
-
-using RenderTrackSpec = std::variant<RenderDirectTrackSpec, SilentTrackSpec>;
-
-struct ToRenderTrackSpecVisitor {
-  RenderTrackSpec operator()(const SilentTrackSpec &spec) noexcept { return spec; }
-
-  RenderTrackSpec operator()(const DirectTrackSpec &spec) noexcept {
-    auto id = spec.track->get<adm::AudioTrackUidId>();
-
-    auto it = channel_map.find(id);
-    assert(it != channel_map.end());
-    return RenderDirectTrackSpec{it->second};
-  }
-
-  const channel_map_t &channel_map;
-};
-
-RenderTrackSpec to_render_track_spec(const TrackSpec &spec, const channel_map_t &channel_map) {
-  return std::visit(ToRenderTrackSpecVisitor{channel_map}, spec);
-}
-
-struct RenderTrackSpecVisitor {
-  void operator()(const RenderDirectTrackSpec &spec) noexcept {
-    for (size_t sample_i = 0; sample_i < n_samples; sample_i++) out[sample_i] = in[spec.track_idx][sample_i];
-  }
-
-  void operator()(const SilentTrackSpec &) noexcept {
-    for (size_t sample_i = 0; sample_i < n_samples; sample_i++) out[sample_i] = 0.0f;
-  }
-
-  const float *const *in;
-  float *out;
-  size_t n_samples;
-};
 
 void render_track_spec(const float *const *in, float *out, size_t n_samples, const RenderTrackSpec &spec) {
   std::visit(RenderTrackSpecVisitor{in, out, n_samples}, spec);
