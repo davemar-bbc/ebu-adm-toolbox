@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 #include "eat/framework/exceptions.hpp"
 #include "eat/framework/process.hpp"
 #include "eat/framework/value_ptr.hpp"
@@ -53,6 +55,7 @@ class InterleavedSampleBlock {
   /// access a single sample
   float &sample(size_t channel, size_t sample) {
     assert(channel < info_.channel_count);
+    if (sample >= info_.sample_count) std::cout << "sample: " << sample << " " << info_.sample_count << std::endl;
     assert(sample < info_.sample_count);
 
     return samples_[info_.channel_count * sample + channel];
@@ -66,6 +69,37 @@ class InterleavedSampleBlock {
   ///
   /// sample s of channel c is at data()[s * info().channel_count + c]
   float *data() { return samples_.data(); }
+
+  /// Append a new block to the existing one, adding as extra channels
+  /// @param newBlock 
+  void append(InterleavedSampleBlock new_block) {
+    auto new_block_info = new_block.info();
+    size_t new_block_size = new_block_info.sample_count * new_block_info.channel_count;
+    std::vector<float> new_vec{new_block.data(), new_block.data() + new_block_size};
+    size_t new_chanel_count = info_.channel_count + new_block_info.channel_count;
+    std::vector<float> out_vec(new_chanel_count * info_.sample_count);
+ 
+    for (size_t sample_i = 0; sample_i < info_.sample_count; sample_i++) {
+      for (size_t channel_i = 0; channel_i < info_.channel_count; channel_i++) {
+        out_vec[new_chanel_count * sample_i + channel_i] = samples_[info_.channel_count * sample_i + channel_i];
+      }
+      for (size_t channel_i = 0; channel_i < new_block_info.channel_count; channel_i++) {
+        if (sample_i < new_block_info.sample_count) { // In case the new_block is shorter than the main one
+          out_vec[new_chanel_count * sample_i + (channel_i + info_.channel_count)] = 
+            new_block.sample(channel_i, sample_i);
+        } else {
+          out_vec[new_chanel_count * sample_i + (channel_i + info_.channel_count)] = 0.0;
+        }
+      }
+    }
+    samples_.resize(new_chanel_count * info_.sample_count);
+    info_.channel_count = new_chanel_count;
+    for (size_t sample_i = 0; sample_i < info_.sample_count; sample_i++) {
+      for (size_t channel_i = 0; channel_i < info_.channel_count; channel_i++) {
+        samples_[new_chanel_count * sample_i + channel_i] = out_vec[new_chanel_count * sample_i + channel_i];
+      } 
+    }
+  }
 
  private:
   std::vector<float> samples_;
