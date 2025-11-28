@@ -208,6 +208,9 @@ void TrackObject::getStartsAndEnds(BlockActive block_active) {
 void TrackObject::mergeCloseObjects(std::vector<int64_t> &new_starts, 
                                     std::vector<int64_t> &new_ends, int64_t min_gap_ns) {
   uint32_t j = 0;
+
+  if (new_starts.size() < 2) return;
+
   // Double loop as more than 2 objects might need merging into 1.
   while (j < new_starts.size() - 1) {
     while (j < new_starts.size() - 1) {
