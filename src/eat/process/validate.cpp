@@ -403,7 +403,8 @@ ProfileValidator make_production_profile_validator() {
   checks.push_back(NumElements{{}, "audioContent", CountRange::between(1, 128), "elements"});
   checks.push_back(NumElements{{}, "audioPackFormat", CountRange::between(1, 256), "elements"});
   checks.push_back(NumElements{{}, "audioChannelFormat", CountRange::between(1, 1024), "elements"});
-  checks.push_back(NumElements{{}, "audioTrackUid", CountRange::between(1, 1024), "elements"});
+  // Need a method of checking for max concurrent audioTrackUid elements (128 max)
+  //checks.push_back(NumElements{{}, "audioTrackUid", CountRange::between(1, 1024), "elements"});
 
   // audioProgramme rules (Section 2.2.1)
   checks.push_back(NumElements{{"audioProgramme"}, "label", CountRange::up_to(16), "elements"});
@@ -425,7 +426,7 @@ ProfileValidator make_production_profile_validator() {
 
   checks.push_back(ElementPresent{{}, "profileList", true});
   checks.push_back(NumElements{{"profileList"}, "profile", CountRange::at_least(1), "elements"});
-  checks.push_back(ElementInList<std::string>{{"profileList", "profile", "profileValue"}, {"EBU Tech XXXX"}});
+  checks.push_back(ElementInList<std::string>{{"profileList", "profile", "profileValue"}, {"EBU Tech 3393"}});
 
   return {checks};
 }
