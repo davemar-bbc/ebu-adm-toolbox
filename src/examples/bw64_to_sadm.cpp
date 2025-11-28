@@ -27,9 +27,12 @@ int main(int argc, char **argv) {
 
   Graph g;
 
-  auto reader = g.register_process(make_read_adm_bw64("reader", in_path, 48000));
+  size_t frame_samples = 48000;
+  auto frame_secs = std::chrono::milliseconds(frame_samples * 1000 / 48000);
+
+  auto reader = g.register_process(make_read_adm_bw64("reader", in_path, frame_samples));
   auto wav_length = g.register_process(make_wav_length("wav length", in_path));
-  auto adm_to_sadm = g.register_process(make_adm_to_sadm("adm to sadm", std::chrono::milliseconds(1000)));
+  auto adm_to_sadm = g.register_process(make_adm_to_sadm("adm to sadm", frame_secs));
   auto sadm_output = g.register_process(make_sadm_output("sadm output"));
   auto audio_output = g.register_process(make_audio_frame_output("audio output"));
 
