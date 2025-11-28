@@ -26,7 +26,7 @@ class ObjectModifier : public FunctionalAtomicProcess {
   void process() override {
     auto adm = std::move(in_axml->get_value());
     adm_ = adm::deepCopy(adm.document.read());
-    adm_->set(Version("ITU-R_BS.2076-2"));
+    adm_->set(Version("ITU-R_BS.2076-3"));
     channel_map_ = adm.channel_map;
     auto block_active = std::move(in_block_active->get_value());
 
