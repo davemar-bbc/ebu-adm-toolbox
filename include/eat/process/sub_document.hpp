@@ -24,7 +24,7 @@ class SubDocument {
  public:
   SubDocument() {}
 
-  ear::Layout create(std::shared_ptr<Document> doc, channel_map_t channel_map, 
+  size_t create(std::shared_ptr<Document> doc, channel_map_t channel_map, 
                      std::shared_ptr<AudioObject> object);
 
   void print();

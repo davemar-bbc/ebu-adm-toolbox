@@ -198,8 +198,8 @@ if(EAT_BUILD)
     add_executable(bw64_to_sadm)
     target_link_libraries(bw64_to_sadm PRIVATE EBU::eat)
 
-    add_executable(level_select)
-    target_link_libraries(level_select PRIVATE EBU::eat)
+    add_executable(squeezer_pp2emi)
+    target_link_libraries(squeezer_pp2emi PRIVATE EBU::eat)
 
     add_subdirectory(src/examples)
   endif()

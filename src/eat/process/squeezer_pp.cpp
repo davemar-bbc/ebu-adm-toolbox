@@ -22,6 +22,11 @@ using namespace eat::render;
 
 namespace eat::process {
 
+struct RenderMono {
+  std::shared_ptr<BasicRenderer> basic_render;
+  bool mono;
+};
+
 class SqueezerProdProf : public StreamingAtomicProcess {
  public:
   SqueezerProdProf(const std::string &name, size_t block_size, uint16_t lev_num_in)
@@ -59,7 +64,10 @@ class SqueezerProdProf : public StreamingAtomicProcess {
     for (auto object : lev_ptr->object_list) {
       // Create a sub-document from the audioObject downwards from the main document
       SubDocument sub_document;
-      auto layout = sub_document.create(doc, channel_map_, object); 
+      auto max_chans = sub_document.create(doc, channel_map_, object); 
+
+      if (max_chans > 8) max_chans = 8;  // Set to 8 for the emission profile for now.
+      auto layout = chooseLayout(max_chans);
 
       // Add the sub-document to an ADMData so it can be rendered
       ADMData local_adm;
@@ -67,17 +75,19 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       local_adm.channel_map = sub_document.getChannelMap();
 
       // Add the new ADM metadata for the rendered version of the audioObject to the new document
-      addNewDoc(local_adm.document.read(), lev_ptr->programme_list, layout, track_num);
-      auto num_tracks = layout.channels().size();
+      addNewDoc(local_adm.document.read(), lev_ptr->programme_list, layout, track_num, max_chans);
+      //auto num_tracks = layout.channels().size();
 
       // Prepare the renderer for this object
+      RenderMono render_mono;
       std::shared_ptr<BasicRenderer> basic_render;
-      basic_render = std::make_shared<BasicRenderer>(local_adm, layout, block_size_);
-      basic_render->initialise();
-      basic_renders.push_back(basic_render);
+      render_mono.basic_render = std::make_shared<BasicRenderer>(local_adm, layout, block_size_);
+      render_mono.basic_render->initialise();
+      render_mono.mono = (max_chans == 1); // Set to mono if max_chans is one (renderer can't do mono)
+      render_monos.push_back(render_mono);
 
       // Increment the track number counter
-      track_num += num_tracks;
+      track_num += max_chans;
     }
 
     // Output the new document
@@ -106,16 +116,9 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       auto tot_block = std::make_shared<InterleavedSampleBlock>(info_tot);
 
       // Loop through each renderer
-      for (auto basic_render : basic_renders) {
+      for (auto render_mono : render_monos) {
         auto info_out = info;
-
-        info_out.channel_count = basic_render->num_channels();
-        auto out_block = std::make_shared<InterleavedSampleBlock>(info_out);
-
-        basic_render->process(in_block, out_block);
-
-        // Append the output of the renderer to the combined output
-        tot_block->append(*out_block);
+        renderMix(render_mono.basic_render, render_mono.mono, in_block, tot_block, info_out, false);
       }
       out_samples->push(std::move(tot_block));
     }
@@ -124,15 +127,9 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       auto info_tot = core_info_;
       info_tot.channel_count = 0;
       auto tot_block = std::make_shared<InterleavedSampleBlock>(info_tot);
-      for (auto basic_render : basic_renders) {
+      for (auto render_mono : render_monos) {
         auto info_out = core_info_;
-        info_out.channel_count = basic_render->num_channels();
-        auto out_block = std::make_shared<InterleavedSampleBlock>(info_out);
-
-        basic_render->finalise(out_block);
-
-        // Append the output of the renderer to the combined output
-        tot_block->append(*out_block);
+        renderMix(render_mono.basic_render, render_mono.mono, nullptr, tot_block, info_out, true);
       }
       out_samples->push(std::move(tot_block));
       out_samples->close();
@@ -146,15 +143,6 @@ class SqueezerProdProf : public StreamingAtomicProcess {
     new_doc_ = Document::create();
     addCommonDefinitionsTo(new_doc_); 
     new_doc_->set(adm::Version{"ITU-R_BS.2076-3"});
-    Profile profile{
-      ProfileValue{"ITU-R BS.2168-0"},
-      ProfileName{"AdvSS Emission ADM and S-ADM Profile"},
-      ProfileVersion{"1.0"},
-      ProfileLevel{"2"},
-    };
-    auto profile_list = std::make_shared<ProfileList>() ;
-    profile_list->add(profile);
-    new_doc_->add(profile_list);
 
     for (auto programme : lev_ptr->programme_list) {
       auto new_programme = programme->copy();
@@ -166,8 +154,11 @@ class SqueezerProdProf : public StreamingAtomicProcess {
 
   // Add the new elements for the new document
   void addNewDoc(std::shared_ptr<const Document> sub_doc, std::vector<std::shared_ptr<AudioProgramme>> programme_list,
-                 const ear::Layout layout, size_t track_num) {
+                 const ear::Layout layout, size_t track_num, size_t max_chans) {
     auto pack_format_id = audioPackFormatLookupTable().at(layout.name());
+    if (max_chans == 1) { // As the renderer can't handle mono, the layout will be wrong
+      pack_format_id = audioPackFormatLookupTable().at("0+1+0");
+    }
     auto new_pack_format = new_doc_->lookup(pack_format_id);
 
     for (auto content : sub_doc->getElements<AudioContent>()) {
@@ -215,6 +206,38 @@ class SqueezerProdProf : public StreamingAtomicProcess {
     }
   }
  
+  // Selects the layout that matches the number of channels
+  ear::Layout chooseLayout(size_t max_chans) {
+    ear::Layout layout = ear::getLayout("0+2+0");
+    for (const auto& layoutl : ear::loadLayouts()) {
+      if (layoutl.channels().size() == max_chans) {
+        layout = layoutl;
+      }
+    }
+    return layout;
+  }
+
+  void renderMix(std::shared_ptr<BasicRenderer> basic_render, 
+                 bool mono, std::shared_ptr<const InterleavedSampleBlock> in_block,
+                 std::shared_ptr<InterleavedSampleBlock> tot_block,
+                 BlockDescription &info_out, bool final) {
+    info_out.channel_count = basic_render->num_channels();
+    auto out_block = std::make_shared<InterleavedSampleBlock>(info_out);
+
+    if (final) {
+      basic_render->finalise(out_block);
+    } else {
+      basic_render->process(in_block, out_block);
+    }
+    if (mono) { // Mix down to mono if only 1 channel need
+      auto mono_block = out_block->mono_mix(0.5);
+      tot_block->append(mono_block);
+    } else {
+      // Append the output of the renderer to the combined output
+      tot_block->append(*out_block);
+    }
+  }
+
  private:
   size_t block_size_;
   uint16_t lev_num_in_;
@@ -225,6 +248,8 @@ class SqueezerProdProf : public StreamingAtomicProcess {
 
   channel_map_t channel_map_;
   std::vector<std::shared_ptr<BasicRenderer>> basic_renders;
+  std::vector<bool> monos;
+  std::vector<RenderMono> render_monos;
 
   std::shared_ptr<Document> new_doc_;
   channel_map_t new_channel_map_;

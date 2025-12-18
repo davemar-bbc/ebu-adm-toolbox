@@ -15,7 +15,7 @@ using namespace adm;
 
 namespace eat::process {
 
-ear::Layout SubDocument::create(std::shared_ptr<Document> doc, channel_map_t channel_map, 
+size_t SubDocument::create(std::shared_ptr<Document> doc, channel_map_t channel_map, 
                                 std::shared_ptr<AudioObject> object) {
   sub_doc_ = Document::create();
   adm::addCommonDefinitionsTo(sub_doc_); 
@@ -34,13 +34,14 @@ ear::Layout SubDocument::create(std::shared_ptr<Document> doc, channel_map_t cha
     }
   }
 
+  /*std::cout << "max_chans=" << max_chans << std::endl;
   if (max_chans > 8) max_chans = 8;
   ear::Layout new_layout = ear::getLayout("0+2+0");
   for (const auto& layout : ear::loadLayouts()) {
     if (layout.channels().size() == max_chans) {
       new_layout = layout;
     }
-  }
+  }*/
 
   for (auto content : doc->getElements<AudioContent>()) {
     for (auto object_ref : content->getReferences<AudioObject>()) {
@@ -52,7 +53,7 @@ ear::Layout SubDocument::create(std::shared_ptr<Document> doc, channel_map_t cha
 
   resolveNewReferences(doc);
 
-  return new_layout;
+  return max_chans;
 }
 
 size_t SubDocument::recurseObjects(std::shared_ptr<AudioObject> object, int n) {

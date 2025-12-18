@@ -10,8 +10,6 @@
 #include <iostream>
 
 #include "eat/framework/exceptions.hpp"
-//#include "eat/process/adm_bw64.hpp"
-//#include "eat/process/block.hpp"
 #include "eat/render/rendering_items.hpp"
 
 using namespace eat::framework;
