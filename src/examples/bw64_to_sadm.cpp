@@ -18,16 +18,16 @@ using namespace eat::process;
 using namespace adm;
 
 int main(int argc, char **argv) {
-  if (argc < 2) {
-    std::cout << "usage: " << (argc ? argv[0] : "bw64_to_sadm") << " in.wav\n";
+  if (argc < 3) {
+    std::cout << "usage: " << (argc ? argv[0] : "bw64_to_sadm") << " <in.wav> <frame size/samps>\n";
     return 1;
   }
 
   std::string in_path = argv[1];
+  size_t frame_samples = atoi(argv[2]);
 
   Graph g;
 
-  size_t frame_samples = 48000;
   auto frame_secs = std::chrono::milliseconds(frame_samples * 1000 / 48000);
 
   auto reader = g.register_process(make_read_adm_bw64("reader", in_path, frame_samples));
