@@ -101,6 +101,21 @@ class InterleavedSampleBlock {
     }
   }
 
+  /// Mixes channels in a block to a mono block
+  /// @return mono block
+  InterleavedSampleBlock mono_mix(float gain) {
+    std::vector<float> mono_vec(info_.sample_count);
+    for (size_t sample_i = 0; sample_i < info_.sample_count; sample_i++) {
+      for (size_t channel_i = 0; channel_i < info_.channel_count; channel_i++) {
+        mono_vec[sample_i] += gain * samples_[info_.channel_count * sample_i + channel_i];
+      }
+    }
+    auto mono_info = info_;
+    mono_info.channel_count = 1;
+    InterleavedSampleBlock mono_block(mono_vec, mono_info);
+    return mono_block;
+  }
+
  private:
   std::vector<float> samples_;
   BlockDescription info_;
