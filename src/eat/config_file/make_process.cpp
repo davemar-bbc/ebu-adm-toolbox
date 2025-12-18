@@ -180,8 +180,9 @@ framework::ProcessPtr make_render(nlohmann::json &config, const std::string &nam
 framework::ProcessPtr make_measure_loudness(nlohmann::json &config, const std::string &name) {
   auto layout_name = get<std::string>(config, "layout");
   auto layout = ear::getLayout(layout_name);
+  bool emission = get<bool>(config, "emission");
 
-  return process::make_measure_loudness(name, layout);
+  return process::make_measure_loudness(name, layout, emission);
 }
 
 framework::ProcessPtr make_set_programme_loudness(nlohmann::json &config, const std::string &name) {
