@@ -192,6 +192,18 @@ framework::ProcessPtr make_set_programme_loudness(nlohmann::json &config, const 
   return process::make_set_programme_loudness(name, id);
 }
 
+framework::ProcessPtr make_update_all_programme_loudnesses(nlohmann::json &config, const std::string &name) {
+  bool emission = get<bool>(config, "emission");
+
+  return process::make_update_all_programme_loudnesses(name, emission);
+}
+
+framework::ProcessPtr make_update_all_loudnesses(nlohmann::json &config, const std::string &name) {
+  bool emission = get<bool>(config, "emission");
+
+  return process::make_update_all_loudnesses(name, emission);
+}
+
 framework::ProcessPtr make_set_profiles(nlohmann::json &config, const std::string &name) {
   auto profiles_json = get<std::vector<nlohmann::json>>(config, "profiles");
 
@@ -287,7 +299,8 @@ framework::ProcessPtr make_process(nlohmann::json &config) {
       {"render", &make_render},
       {"measure_loudness", &make_measure_loudness},
       {"set_programme_loudness", &make_set_programme_loudness},
-      {"update_all_programme_loudnesses", make_process_no_args(&process::make_update_all_programme_loudnesses)},
+      {"update_all_programme_loudnesses", &make_update_all_programme_loudnesses},
+      {"update_all_loudnesses", &make_update_all_loudnesses},
       {"set_profiles", &make_set_profiles},
       {"set_position_defaults", make_process_no_args(&process::make_set_position_defaults)},
       {"remove_silent_atu", make_process_no_args(&process::make_remove_silent_atu)},

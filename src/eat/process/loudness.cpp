@@ -161,8 +161,9 @@ framework::ProcessPtr make_set_programme_loudness(const std::string &name, const
 
 class UpdateAllProgrammeLoudnesses : public DynamicSubgraph {
  public:
-  UpdateAllProgrammeLoudnesses(const std::string &name)
+  UpdateAllProgrammeLoudnesses(const std::string &name, bool emission)
       : DynamicSubgraph(name),
+        emission_(emission),
         in_samples(add_in_port<StreamPort<InterleavedBlockPtr>>("in_samples")),
         in_axml(add_in_port<DataPort<ADMData>>("in_axml")),
         out_axml(add_out_port<DataPort<ADMData>>("out_axml")) {}
@@ -190,7 +191,7 @@ class UpdateAllProgrammeLoudnesses : public DynamicSubgraph {
       render::SelectionOptionsId options = {render::ProgrammeIdStart{id}};
       auto render = render::make_render("measure_" + id_str, layout, 1024, options);
       graph->register_process(render);
-      auto measure = graph->add_process<MeasureLoudness>("measure_" + id_str, layout, false);
+      auto measure = graph->add_process<MeasureLoudness>("measure_" + id_str, layout, emission_);
       auto update = graph->add_process<SetProgrammeLoudness>("update_" + id_str, id);
 
       graph->connect(parent_in_samples->port, render->get_in_port("in_samples"));
@@ -207,13 +208,14 @@ class UpdateAllProgrammeLoudnesses : public DynamicSubgraph {
   }
 
  private:
+  bool emission_;
   StreamPortPtr<InterleavedBlockPtr> in_samples;
   DataPortPtr<ADMData> in_axml;
   DataPortPtr<ADMData> out_axml;
 };
 
-framework::ProcessPtr make_update_all_programme_loudnesses(const std::string &name) {
-  return std::make_shared<UpdateAllProgrammeLoudnesses>(name);
+framework::ProcessPtr make_update_all_programme_loudnesses(const std::string &name, bool emission) {
+  return std::make_shared<UpdateAllProgrammeLoudnesses>(name, emission);
 }
 
 
@@ -256,9 +258,9 @@ framework::ProcessPtr make_set_content_loudness(const std::string &name, const a
 
 class UpdateAllLoudnesses : public DynamicSubgraph {
  public:
-  UpdateAllLoudnesses(const std::string &name, bool emission_)
+  UpdateAllLoudnesses(const std::string &name, bool emission)
       : DynamicSubgraph(name),
-        emission(emission_),
+        emission_(emission),
         in_samples(add_in_port<StreamPort<InterleavedBlockPtr>>("in_samples")),
         in_axml(add_in_port<DataPort<ADMData>>("in_axml")),
         out_axml(add_out_port<DataPort<ADMData>>("out_axml")) {}
@@ -286,7 +288,7 @@ class UpdateAllLoudnesses : public DynamicSubgraph {
       render::SelectionOptionsId options = {render::ProgrammeIdStart{id}};
       auto render = render::make_render("measure_" + id_str, layout, 1024, options);
       graph->register_process(render);
-      auto measure = graph->add_process<MeasureLoudness>("measure_" + id_str, layout, emission);
+      auto measure = graph->add_process<MeasureLoudness>("measure_" + id_str, layout, emission_);
       auto update = graph->add_process<SetProgrammeLoudness>("update_" + id_str, id);
 
       graph->connect(parent_in_samples->port, render->get_in_port("in_samples"));
@@ -304,7 +306,7 @@ class UpdateAllLoudnesses : public DynamicSubgraph {
       render::SelectionOptionsId options = {render::ContentIdStart{id}};
       auto render = render::make_render("measure_" + id_str, layout, 1024, options);
       graph->register_process(render);
-      auto measure = graph->add_process<MeasureLoudness>("measure_" + id_str, layout, emission);
+      auto measure = graph->add_process<MeasureLoudness>("measure_" + id_str, layout, emission_);
       auto update = graph->add_process<SetContentLoudness>("update_" + id_str, id);
 
       graph->connect(parent_in_samples->port, render->get_in_port("in_samples"));
@@ -321,14 +323,14 @@ class UpdateAllLoudnesses : public DynamicSubgraph {
   }
 
  private:
-  bool emission;
+  bool emission_;
   StreamPortPtr<InterleavedBlockPtr> in_samples;
   DataPortPtr<ADMData> in_axml;
   DataPortPtr<ADMData> out_axml;
 };
 
-framework::ProcessPtr make_update_all_loudnesses(const std::string &name, bool emission_) {
-  return std::make_shared<UpdateAllLoudnesses>(name, emission_);
+framework::ProcessPtr make_update_all_loudnesses(const std::string &name, bool emission) {
+  return std::make_shared<UpdateAllLoudnesses>(name, emission);
 }
 
 }  // namespace eat::process

@@ -16,6 +16,8 @@ list(
   rewrite_content_objects_emission.schema.json
   set_profiles.schema.json
   set_programme_loudness.schema.json
+  update_all_programme_loudnesses.schema.json
+  update_all_loudnesses.schema.json
   set_version.schema.json
   validate.schema.json
   hoa_order_process.schema.json)

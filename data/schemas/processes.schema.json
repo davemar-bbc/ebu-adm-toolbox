@@ -39,6 +39,12 @@
     },
     {
       "$ref": "hoa_order_process.schema.json"
+    },
+    {
+      "$ref": "update_all_programme_loudnesses.schema.json"
+    },
+    {
+      "$ref": "update_all_loudnesses.schema.json"
     }
   ]
 }

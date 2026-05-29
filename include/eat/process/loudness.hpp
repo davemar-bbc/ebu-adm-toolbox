@@ -20,7 +20,7 @@ framework::ProcessPtr make_set_programme_loudness(const std::string &name, const
 /// - in_axml (DataPort<ADMData>) : input ADM data
 /// - in_samples (StreamPort<InterleavedBlockPtr>) : input samples for in_axml
 /// - out_axml (DataPort<ADMData>) : output ADM data
-framework::ProcessPtr make_update_all_programme_loudnesses(const std::string &name);
+framework::ProcessPtr make_update_all_programme_loudnesses(const std::string &name, bool emission);
 
 /// a process which sets the loudness of an audioContent with the given ID
 /// - in_axml (DataPort<ADMData>) : input ADM data
@@ -33,6 +33,6 @@ framework::ProcessPtr make_set_content_loudness(const std::string &name, const a
 /// - in_axml (DataPort<ADMData>) : input ADM data
 /// - in_samples (StreamPort<InterleavedBlockPtr>) : input samples for in_axml
 /// - out_axml (DataPort<ADMData>) : output ADM data
-framework::ProcessPtr make_update_all_loudnesses(const std::string &name, bool emission_);
+framework::ProcessPtr make_update_all_loudnesses(const std::string &name, bool emission);
 
 }  // namespace eat::process
