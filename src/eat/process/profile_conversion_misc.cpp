@@ -17,8 +17,8 @@ namespace eat::process {
 
 struct ToAdmProfile {
   adm::Profile operator()(profiles::ITUEmissionProfile &p) {
-    return adm::Profile{adm::ProfileValue{"ITU-R BS.[ADM-NGA-Emission]-0"},
-                        adm::ProfileName{"AdvSS Emission ADM and S-ADM Profile"}, adm::ProfileVersion{"1"},
+    return adm::Profile{adm::ProfileValue{"ITU-R BS.2168"},
+                        adm::ProfileName{"Advanced sound system: ADM and S-ADM profile for emission"}, adm::ProfileVersion{"1"},
                         adm::ProfileLevel{std::to_string(p.level())}};
   }
 };
@@ -38,6 +38,10 @@ class SetProfiles : public FunctionalAtomicProcess {
     std::vector<adm::Profile> adm_profiles;
     for (auto &profile : profiles) adm_profiles.push_back(std::visit(ToAdmProfile(), profile));
 
+    auto profile_list = std::make_shared<adm::ProfileList>();
+    for (auto &adm_profile : adm_profiles) {
+      profile_list->add(adm_profile);
+    }
     doc->set(adm::ProfileList{std::move(adm_profiles)});
 
     adm.document = std::move(doc);
