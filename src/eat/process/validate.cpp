@@ -169,7 +169,7 @@ struct FormatVisitor {
   std::string operator()(const ValidStreamFormatMessage &m) {
     return adm::formatId(m.stream_id) + " has both audioPackForamtIdRef and audioTrackFormatIdRef elements";
   }
-  
+
   std::string operator()(const StringLength &c) {
     return ev::dotted_path(c.path) + " must be " + c.range.format() + " characters long";
   }
@@ -322,6 +322,9 @@ ProfileValidator make_emission_profile_validator(int level) {
       ValidLanguage{{"audioProgramme", "language"}, LanguageCodeType::REGULAR | LanguageCodeType::UNDETERMINED});
   checks.push_back(
       ValidLanguage{{"audioContent", "language"}, LanguageCodeType::REGULAR | LanguageCodeType::UNDETERMINED});
+
+  checks.push_back(ElementPresent{{"audioProgramme"}, "language", true});
+  checks.push_back(ElementPresent{{"audioContent"}, "language", true});
 
   checks.push_back(ElementPresent{{"audioProgramme", "label"}, "language", true});
   checks.push_back(ElementPresent{{"audioContent", "label"}, "language", true});

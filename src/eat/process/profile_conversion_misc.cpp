@@ -867,4 +867,60 @@ ProcessPtr make_set_content_dialogue_default(const std::string &name) {
   return std::make_shared<SetContentDialogueDefault>(name);
 }
 
+class SetContentLanguage : public FunctionalAtomicProcess {
+ public:
+  SetContentLanguage(const std::string &name)
+      : FunctionalAtomicProcess(name),
+        in_axml(add_in_port<DataPort<ADMData>>("in_axml")),
+        out_axml(add_out_port<DataPort<ADMData>>("out_axml")) {}
+
+  void process() override {
+    auto adm = std::move(in_axml->get_value());
+    auto doc = adm.document.move_or_copy();
+
+    for (auto &content : doc->getElements<adm::AudioContent>()) {
+      if (!content->has<adm::AudioContentLanguage>()) content->set(adm::AudioContentLanguage("und"));
+    }
+
+    adm.document = std::move(doc);
+    out_axml->set_value(std::move(adm));
+  }
+
+ private:
+  DataPortPtr<ADMData> in_axml;
+  DataPortPtr<ADMData> out_axml;
+};
+
+ProcessPtr make_set_content_language(const std::string &name) {
+  return std::make_shared<SetContentLanguage>(name);
+}
+
+class SetProgrammeLanguage : public FunctionalAtomicProcess {
+ public:
+  SetProgrammeLanguage(const std::string &name)
+      : FunctionalAtomicProcess(name),
+        in_axml(add_in_port<DataPort<ADMData>>("in_axml")),
+        out_axml(add_out_port<DataPort<ADMData>>("out_axml")) {}
+
+  void process() override {
+    auto adm = std::move(in_axml->get_value());
+    auto doc = adm.document.move_or_copy();
+
+    for (auto &programme : doc->getElements<adm::AudioProgramme>()) {
+      if (!programme->has<adm::AudioProgrammeLanguage>()) programme->set(adm::AudioProgrammeLanguage("und"));
+    }
+
+    adm.document = std::move(doc);
+    out_axml->set_value(std::move(adm));
+  }
+
+ private:
+  DataPortPtr<ADMData> in_axml;
+  DataPortPtr<ADMData> out_axml;
+};
+
+ProcessPtr make_set_programme_language(const std::string &name) {
+  return std::make_shared<SetProgrammeLanguage>(name);
+}
+
 }  // namespace eat::process

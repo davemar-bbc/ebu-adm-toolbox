@@ -305,6 +305,8 @@ framework::ProcessPtr make_process(nlohmann::json &config) {
       {"set_version", &make_set_version},
       {"set_content_dialogue_default", make_process_no_args(&process::make_set_content_dialogue_default)},
       {"limit_interaction", &make_limit_interaction},
+      {"set_content_language", make_process_no_args(&process::make_set_content_language)},
+      {"set_programme_language", make_process_no_args(&process::make_set_programme_language)},
   }};
 
   std::string type = get<std::string>(config, "type");

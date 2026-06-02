@@ -200,6 +200,18 @@
             "out_ports": ["out_axml"]
         },
         {
+            "name": "set_content_language",
+            "type": "set_content_language",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "set_programme_language",
+            "type": "set_programme_language",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
             "name": "output",
             "type": "write_adm_bw64",
             "in_ports": ["in_axml"]

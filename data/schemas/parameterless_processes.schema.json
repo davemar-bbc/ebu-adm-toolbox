@@ -23,7 +23,9 @@
         {"const": "remove_object_times_common_unsafe"},
         {"const": "remove_importance"},
         {"const": "infer_object_interact"},
-        {"const": "set_content_dialogue_default"}
+        {"const": "set_content_dialogue_default"},
+        {"const": "set_content_language"},
+        {"const": "set_programme_language"}
       ]
     }
   }
