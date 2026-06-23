@@ -18,8 +18,8 @@ namespace eat::process {
 struct ToAdmProfile {
   adm::Profile operator()(profiles::ITUEmissionProfile &p) {
     return adm::Profile{adm::ProfileValue{"ITU-R BS.2168"},
-                        adm::ProfileName{"Advanced sound system: ADM and S-ADM profile for emission"}, adm::ProfileVersion{"1"},
-                        adm::ProfileLevel{std::to_string(p.level())}};
+                        adm::ProfileName{"Advanced sound system: ADM and S-ADM profile for emission"},
+                        adm::ProfileVersion{"1"}, adm::ProfileLevel{std::to_string(p.level())}};
   }
 };
 
@@ -891,9 +891,7 @@ class SetContentLanguage : public FunctionalAtomicProcess {
   DataPortPtr<ADMData> out_axml;
 };
 
-ProcessPtr make_set_content_language(const std::string &name) {
-  return std::make_shared<SetContentLanguage>(name);
-}
+ProcessPtr make_set_content_language(const std::string &name) { return std::make_shared<SetContentLanguage>(name); }
 
 class SetProgrammeLanguage : public FunctionalAtomicProcess {
  public:
@@ -919,8 +917,6 @@ class SetProgrammeLanguage : public FunctionalAtomicProcess {
   DataPortPtr<ADMData> out_axml;
 };
 
-ProcessPtr make_set_programme_language(const std::string &name) {
-  return std::make_shared<SetProgrammeLanguage>(name);
-}
+ProcessPtr make_set_programme_language(const std::string &name) { return std::make_shared<SetProgrammeLanguage>(name); }
 
 }  // namespace eat::process

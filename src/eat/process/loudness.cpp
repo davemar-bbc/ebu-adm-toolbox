@@ -218,7 +218,6 @@ framework::ProcessPtr make_update_all_programme_loudnesses(const std::string &na
   return std::make_shared<UpdateAllProgrammeLoudnesses>(name, emission);
 }
 
-
 class SetContentLoudness : public FunctionalAtomicProcess {
  public:
   SetContentLoudness(const std::string &name, const adm::AudioContentId &content_id_)
@@ -254,7 +253,6 @@ class SetContentLoudness : public FunctionalAtomicProcess {
 framework::ProcessPtr make_set_content_loudness(const std::string &name, const adm::AudioContentId &content_id) {
   return std::make_shared<SetContentLoudness>(name, content_id);
 }
-
 
 class UpdateAllLoudnesses : public DynamicSubgraph {
  public:

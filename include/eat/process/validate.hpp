@@ -429,7 +429,7 @@ struct ValidStreamFormatMessage {
   }
 };
 
-/// check that audioStreamFormat contains the invalid combination of both 
+/// check that audioStreamFormat contains the invalid combination of both
 /// audioChannelFormat and audioPackFormat references
 struct ValidStreamFormat {
   static std::string name() { return "ValidStreamFormat"; }
@@ -443,8 +443,9 @@ struct ValidStreamFormat {
 };
 
 /// known checks
-using Check = std::variant<ElementInList<std::string>, ElementInRange<float>, ElementPresent, NumElements,
-                           ObjectContentOrNested, ValidStreamFormat, StringLength, UniqueElements<std::string>, ValidLanguage>;
+using Check =
+    std::variant<ElementInList<std::string>, ElementInRange<float>, ElementPresent, NumElements, ObjectContentOrNested,
+                 ValidStreamFormat, StringLength, UniqueElements<std::string>, ValidLanguage>;
 
 /// messages that known checks can produce
 using Message = detail::ToMessages<Check>;
