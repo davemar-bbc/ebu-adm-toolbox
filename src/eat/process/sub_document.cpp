@@ -34,19 +34,18 @@ size_t SubDocument::create(std::shared_ptr<Document> doc, channel_map_t channel_
     }
   }
 
-  /*std::cout << "max_chans=" << max_chans << std::endl;
-  if (max_chans > 8) max_chans = 8;
-  ear::Layout new_layout = ear::getLayout("0+2+0");
-  for (const auto& layout : ear::loadLayouts()) {
-    if (layout.channels().size() == max_chans) {
-      new_layout = layout;
-    }
-  }*/
-
   for (auto content : doc->getElements<AudioContent>()) {
     for (auto object_ref : content->getReferences<AudioObject>()) {
       if (object_ref == object) {
+        // Restrict music content to 6 channels
+        if (content->has<NonDialogueContentKind>()) {
+          if (content->get<NonDialogueContentKind>() == NonDialogueContent::MUSIC) {
+            if (max_chans > 6) max_chans = 6;
+          }
+        }
+        std::cout << std::endl;
         sub_doc_->add(content->copy());
+        std::cout << "create: " << formatId(content->get<AudioContentId>()) << std::endl;
       }
     }
   }
@@ -73,6 +72,7 @@ size_t SubDocument::recurseObjects(std::shared_ptr<AudioObject> object, int n) {
       addTrackUids(object);
     }
   }
+
   sub_doc_->add(object->copy());
   return max_chans;
 }

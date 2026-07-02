@@ -1,7 +1,5 @@
 #include "eat/process/validate.hpp"
 
-#include <iostream>
-
 namespace ev = eat::utilities::element_visitor;
 
 namespace eat::process::validation {

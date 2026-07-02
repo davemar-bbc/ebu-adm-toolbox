@@ -299,7 +299,8 @@ double get_path_gain(const ADMPath &path) {
 ear::ObjectDivergence get_divergence(const adm::ObjectDivergence &divergence, bool cartesian) {
   // use the defaults from BS.2127 rather than BS.2076, which changed between -1 and -2
   if (cartesian) {
-    if (divergence.has<adm::AzimuthRange>())
+    //if (divergence.has<adm::AzimuthRange>())
+    if (!divergence.isDefault<adm::AzimuthRange>())
       throw std::runtime_error(
           "cartesian Objects audioBlockFormat has an objectDivergence element with an azimuthRange attribute");
     ear::CartesianObjectDivergence ear_divergence{static_cast<double>(divergence.get<adm::Divergence>().get())};
@@ -317,11 +318,18 @@ ear::ObjectDivergence get_divergence(const adm::ObjectDivergence &divergence, bo
 ear::ObjectsTypeMetadata to_otm(const ObjectRenderingItem &ri, const adm::AudioBlockFormatObjects &bf) {
   ear::ObjectsTypeMetadata otm;
 
-  otm.position = boost::apply_visitor(ConvertPositionVisitor(), bf.get<adm::Position>());
+  if (bf.get<adm::Cartesian>().get()) { 
+    // Cheat to get around libear not handling cartesian, so just assuming front centre
+    otm.position = ear::PolarPosition{0.0, 0.0, 1.0};
+    otm.cartesian = false;
+  } else {
+    otm.position = boost::apply_visitor(ConvertPositionVisitor(), bf.get<adm::Position>());
+    otm.cartesian = bf.get<adm::Cartesian>().get();
+  }
+
   otm.width = bf.get<adm::Width>().get();
   otm.height = bf.get<adm::Height>().get();
   otm.depth = bf.get<adm::Depth>().get();
-  otm.cartesian = bf.get<adm::Cartesian>().get();
   otm.gain = get_path_gain(ri.adm_path) * bf.get<adm::Gain>().asLinear();
   otm.diffuse = bf.get<adm::Diffuse>().get();
 

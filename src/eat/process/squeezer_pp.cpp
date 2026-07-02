@@ -59,6 +59,8 @@ class SqueezerProdProf : public StreamingAtomicProcess {
     // Create the new output ADM document
     createNewDoc(lev_ptr);
 
+    mono_co_ = 0;
+
     // Go through each audioObject at the chosen level
     size_t track_num = 0;
     for (auto object : lev_ptr->object_list) {
@@ -68,6 +70,10 @@ class SqueezerProdProf : public StreamingAtomicProcess {
 
       if (max_chans > 8) max_chans = 8;  // Set to 8 for the emission profile for now.
       auto layout = chooseLayout(max_chans);
+      auto num_chans = layoutChans(layout);
+      if (num_chans > max_chans) num_chans = max_chans;
+
+      std::cout << formatId(object->get<AudioObjectId>()) << " " << max_chans << " " << num_chans << std::endl;
 
       // Add the sub-document to an ADMData so it can be rendered
       ADMData local_adm;
@@ -75,7 +81,7 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       local_adm.channel_map = sub_document.getChannelMap();
 
       // Add the new ADM metadata for the rendered version of the audioObject to the new document
-      addNewDoc(local_adm.document.read(), lev_ptr->programme_list, layout, track_num, max_chans);
+      addNewDoc(local_adm.document.read(), lev_ptr->programme_list, layout, track_num, num_chans);
       //auto num_tracks = layout.channels().size();
 
       // Prepare the renderer for this object
@@ -83,11 +89,25 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       std::shared_ptr<BasicRenderer> basic_render;
       render_mono.basic_render = std::make_shared<BasicRenderer>(local_adm, layout, block_size_);
       render_mono.basic_render->initialise();
-      render_mono.mono = (max_chans == 1); // Set to mono if max_chans is one (renderer can't do mono)
+      render_mono.mono = (max_chans == 1); // Set to mono if num_chans is one (renderer can't do mono)
       render_monos.push_back(render_mono);
 
       // Increment the track number counter
-      track_num += max_chans;
+      track_num += num_chans;
+    }
+
+    for (auto &new_object : new_doc_->getElements<AudioObject>()) {
+      for (auto main_object : doc->getElements<AudioObject>()) {
+        if (main_object->get<AudioObjectId>() == new_object->get<AudioObjectId>()) {
+          for (auto &comp : main_object->getComplementaryObjects()) {
+            auto comp_id = comp->get<AudioObjectId>();
+            auto comp_copy = new_doc_->lookup(comp_id);
+            if (comp_copy) {
+              new_object->addComplementary(comp_copy);
+            }
+          }
+        }
+      }
     }
 
     // Output the new document
@@ -156,10 +176,12 @@ class SqueezerProdProf : public StreamingAtomicProcess {
   void addNewDoc(std::shared_ptr<const Document> sub_doc, std::vector<std::shared_ptr<AudioProgramme>> programme_list,
                  const ear::Layout layout, size_t track_num, size_t max_chans) {
     auto pack_format_id = audioPackFormatLookupTable().at(layout.name());
-    if (max_chans == 1) { // As the renderer can't handle mono, the layout will be wrong
-      pack_format_id = audioPackFormatLookupTable().at("0+1+0");
-    }
     auto new_pack_format = new_doc_->lookup(pack_format_id);
+    if (max_chans == 1) { // As the renderer can't handle mono, the layout will be wrong
+      generateMonoObject(new_pack_format);
+      //pack_format_id = audioPackFormatLookupTable().at("0+1+0");
+    }
+    //auto new_pack_format = new_doc_->lookup(pack_format_id);
 
     for (auto content : sub_doc->getElements<AudioContent>()) {
       auto new_content = content->copy();
@@ -167,6 +189,11 @@ class SqueezerProdProf : public StreamingAtomicProcess {
         auto new_object = object_ref->copy();
         new_object->addReference(new_pack_format);
         for (auto channel_format : new_pack_format->getReferences<AudioChannelFormat>()) {
+          std::cout << "addNewDoc: " << formatId(content->get<AudioContentId>()) << " ";
+          std::cout << formatId(new_object->get<AudioObjectId>()) << " ";
+          std::cout << formatId(new_pack_format->get<AudioPackFormatId>()) << " ";
+          std::cout << formatId(channel_format->get<AudioChannelFormatId>()) << std::endl;
+
           auto track_uid = AudioTrackUid::create();
           track_uid->setReference(channel_format);
           track_uid->setReference(new_pack_format);
@@ -194,6 +221,23 @@ class SqueezerProdProf : public StreamingAtomicProcess {
     }
   }
 
+
+  void generateMonoObject(std::shared_ptr<AudioPackFormat> &new_pack_format) {
+    auto name = std::string("Mono_") + std::to_string(mono_co_);
+    mono_co_++;
+    auto new_channel_format = AudioChannelFormat::create(
+            AudioChannelFormatName(name), TypeDefinition::OBJECTS);
+    CartesianPosition pos(X(0.0), Y(1.0), Z(0.0));
+    AudioBlockFormatObjects block_format(pos, Cartesian(true));
+    new_channel_format->add(block_format);
+    new_pack_format = AudioPackFormat::create(
+            AudioPackFormatName(name), TypeDefinition::OBJECTS);
+    new_pack_format->addReference(new_channel_format);
+    new_doc_->add(new_channel_format);
+    new_doc_->add(new_pack_format);
+  }
+
+
   // Add references to the audioProgrammes
   void allocateContent(std::shared_ptr<AudioProgramme> new_programme,
                        std::shared_ptr<AudioProgramme> programme) {
@@ -208,13 +252,21 @@ class SqueezerProdProf : public StreamingAtomicProcess {
  
   // Selects the layout that matches the number of channels
   ear::Layout chooseLayout(size_t max_chans) {
+    // This subset should suit fussy profiles
+    std::vector<ear::Layout> layouts{ear::getLayout("0+2+0"),
+                                     ear::getLayout("0+5+0"),
+                                     ear::getLayout("4+5+0")}; 
     ear::Layout layout = ear::getLayout("0+2+0");
-    for (const auto& layoutl : ear::loadLayouts()) {
-      if (layoutl.channels().size() == max_chans) {
+    for (const auto& layoutl : /*ear::loadLayouts()*/ layouts) {
+      if (layoutl.channels().size() <= max_chans) {
         layout = layoutl;
       }
     }
     return layout;
+  }
+
+  size_t layoutChans(ear::Layout layout) {
+    return layout.channels().size();
   }
 
   void renderMix(std::shared_ptr<BasicRenderer> basic_render, 
@@ -256,6 +308,7 @@ class SqueezerProdProf : public StreamingAtomicProcess {
 
   BlockDescription core_info_;
   bool first_;
+  uint16_t mono_co_;
 };
 
 framework::ProcessPtr make_squeezer_prod_prof(const std::string &name, size_t block_size, uint16_t lev_num_in) {

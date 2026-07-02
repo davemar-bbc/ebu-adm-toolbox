@@ -52,7 +52,8 @@ target_sources(
           process/adm_to_sadm.cpp
           process/squeezer_pp.cpp
           process/tag_levels.cpp
-          process/sub_document.cpp)
+          process/sub_document.cpp
+          process/squeezer_emi_dlb.cpp)
 
 if(EAT_BUILD_TESTS)
   target_sources(

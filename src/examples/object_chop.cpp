@@ -1,4 +1,3 @@
-#define APLAY
 
 #include <cmath>
 #include <cstdlib>
@@ -30,6 +29,7 @@ int main(int argc, char **argv) {
 
   auto reader = g.register_process(make_read_adm_bw64("reader", in_path, 1024));
   auto track_analyser = g.register_process(make_track_analyser("track analyser"));
+  auto block_print = g.register_process(make_block_print("block print"));
   auto object_modifier = g.register_process(make_object_modifier("object modifier"));
   auto writer = g.register_process(make_write_adm_bw64("writer", out_path));
 
@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
   g.connect(track_analyser->get_out_port("out_blocks"), object_modifier->get_in_port("in_blocks"));
   g.connect(object_modifier->get_out_port("out_axml"), writer->get_in_port("in_axml"));
   g.connect(reader->get_out_port("out_samples"), writer->get_in_port("in_samples"));
+  g.connect(track_analyser->get_out_port("out_blocks"), block_print->get_in_port("in_blocks"));
 
   Plan p = plan(g);
   p.run();

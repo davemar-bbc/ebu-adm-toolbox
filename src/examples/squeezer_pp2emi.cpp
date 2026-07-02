@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   auto writer = g.register_process(make_write_adm_bw64("writer", out_path));
   auto measure_loudness = g.register_process(make_update_all_loudnesses("measure_loudness", true));
   auto squeezer_prod_prof = g.register_process(make_squeezer_prod_prof("squeezer pp", block_size, level));
-  auto profile = g.register_process(make_set_profiles("set_profiles", {profiles::ITUEmissionProfile{2}}));
+  auto profile = g.register_process(make_set_profiles("set_profiles", {profiles::ITUEmissionProfile{1}}));
 
   g.connect(reader->get_out_port("out_axml"), squeezer_prod_prof->get_in_port("in_axml"));
   g.connect(reader->get_out_port("out_samples"), squeezer_prod_prof->get_in_port("in_samples"));

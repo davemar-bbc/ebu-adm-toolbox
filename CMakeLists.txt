@@ -8,6 +8,7 @@ endif()
 project(eat VERSION 0.0.1)
 
 # Options
+add_compile_definitions(BOOST_NO_CXX98_FUNCTION_BASE)
 
 # Probably only ever turn this off if doing a formatting check on CI
 option(EAT_BUILD "enable build of ADM-Toolbox" ON)
@@ -200,6 +201,9 @@ if(EAT_BUILD)
 
     add_executable(squeezer_pp2emi)
     target_link_libraries(squeezer_pp2emi PRIVATE EBU::eat)
+
+    add_executable(squeezer_emi2dlb)
+    target_link_libraries(squeezer_emi2dlb PRIVATE EBU::eat)
 
     add_subdirectory(src/examples)
   endif()
