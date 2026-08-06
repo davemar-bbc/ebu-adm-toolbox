@@ -49,10 +49,11 @@ target_sources(
           process/object_modifier.cpp
           process/track_object.cpp
           process/block_handler.cpp
-          process/adm_to_sadm.cpp
+          #process/adm_to_sadm.cpp
           process/squeezer_pp.cpp
           process/tag_levels.cpp
-          process/sub_document.cpp)
+          process/sub_document.cpp
+          process/add_tag_layers.cpp)
 
 if(EAT_BUILD_TESTS)
   target_sources(

@@ -12,6 +12,7 @@
 #include "eat/process/remove_elements.hpp"
 #include "eat/process/remove_unused.hpp"
 #include "eat/process/validate_process.hpp"
+#include "eat/process/add_tag_layers.hpp"
 #include "eat/render/render.hpp"
 #include "eat/render/hoa_encoder.hpp"
 #include "eat/utilities/parse_id_variant.hpp"
@@ -316,6 +317,8 @@ framework::ProcessPtr make_process(nlohmann::json &config) {
       {"set_content_dialogue_default", make_process_no_args(&process::make_set_content_dialogue_default)},
       {"limit_interaction", &make_limit_interaction},
       {"hoa_encoder", &make_hoa_encoder},
+      {"add_tag_layers", make_process_no_args(&process::make_add_tag_layers)},
+      {"add_importance_defaults", make_process_no_args(&process::make_add_importance_defaults)},
   }};
 
   std::string type = get<std::string>(config, "type");

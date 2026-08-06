@@ -442,9 +442,152 @@ struct ValidStreamFormat {
   void visit(F) {}
 };
 
+struct TagListPresentMessage {
+  static std::string name() { return "TagListPresentMessage"; }
+
+  bool list_exists;
+
+  template <typename F>
+  void visit(F f) {
+    f("list_exists", list_exists);
+  }
+};
+
+/// check if tagList is present
+///
+struct TagListPresent {
+  static std::string name() { return "TagListPresent"; }
+
+  using Message = TagListPresentMessage;
+
+  std::vector<Message> run(const ADMData &adm) const;
+
+  template <typename F>
+  void visit(F) {}
+};
+
+struct NumTagGroupsMessage {
+  static std::string name() { return "NumTagGroupsMessage"; }
+
+  size_t n;
+
+  template <typename F>
+  void visit(F f) {
+    f("n", n);
+  }
+};
+
+/// check for the number of tagGroups within a tagList
+///
+struct NumTagGroups {
+  static std::string name() { return "NumTagGroups"; }
+
+  /// acceptable number of elements
+  CountRange range;
+
+  using Message = NumTagGroupsMessage;
+
+  std::vector<Message> run(const ADMData &adm) const;
+
+  template <typename F>
+  void visit(F f) {
+    f("range", range);
+  }
+};
+
+struct TagClassPresentMessage {
+  static std::string name() { return "TagClassPresentMessage"; }
+
+  size_t valid_classes;
+
+  template <typename F>
+  void visit(F f) {
+    f("valid_classes", valid_classes);
+  }
+};
+
+/// check if the correct tag class is present
+///
+struct TagClassPresent {
+  static std::string name() { return "TagClassPresent"; }
+
+  // acceptable substring of class
+  std::string class_substr;
+
+  using Message = TagClassPresentMessage;
+
+  std::vector<Message> run(const ADMData &adm) const;
+
+  template <typename F>
+  void visit(F f) {
+    f("class_substr", class_substr);
+  }
+};
+
+
+struct ProfileListPresentMessage {
+  static std::string name() { return "ProfileListPresentMessage"; }
+
+  bool list_exists;
+
+  template <typename F>
+  void visit(F f) {
+    f("list_exists", list_exists);
+  }
+};
+
+/// check if profileList is present
+///
+struct ProfileListPresent {
+  static std::string name() { return "ProfileListPresent"; }
+
+  using Message = ProfileListPresentMessage;
+
+  std::vector<Message> run(const ADMData &adm) const;
+
+  template <typename F>
+  void visit(F) {}
+};
+
+struct ProfileNameValuePresentMessage {
+  static std::string name() { return "ProfileNameValuePresentMessage"; }
+
+  bool valid_name;
+  bool valid_value;
+
+  template <typename F>
+  void visit(F f) {
+    f("valid_name", valid_name);
+    f("valid_value", valid_value);
+  }
+};
+
+/// check if the correct tag class is present
+///
+struct ProfileNameValuePresent {
+  static std::string name() { return "ProfileNameValuePresent"; }
+
+  // acceptable string of name
+  std::string name_str;
+  // acceptable string of value
+  std::string value_str;
+
+  using Message = ProfileNameValuePresentMessage;
+
+  std::vector<Message> run(const ADMData &adm) const;
+
+  template <typename F>
+  void visit(F f) {
+    f("name_str", name_str);
+    f("value_str", value_str);
+  }
+};
+
+
 /// known checks
 using Check = std::variant<ElementInList<std::string>, ElementInRange<float>, ElementPresent, NumElements,
-                           ObjectContentOrNested, ValidStreamFormat, StringLength, UniqueElements<std::string>, ValidLanguage>;
+                           ObjectContentOrNested, ValidStreamFormat, TagListPresent, NumTagGroups, TagClassPresent, 
+                           ProfileListPresent, ProfileNameValuePresent, StringLength, UniqueElements<std::string>, ValidLanguage>;
 
 /// messages that known checks can produce
 using Message = detail::ToMessages<Check>;

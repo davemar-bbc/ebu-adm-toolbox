@@ -94,6 +94,83 @@ std::vector<ValidStreamFormat::Message> ValidStreamFormat::run(const ADMData &ad
   return messages;
 }
 
+std::vector<TagListPresent::Message> TagListPresent::run(const ADMData &adm) const {
+  std::vector<Message> messages;
+  bool list_exists = adm.document.read()->has<adm::TagList>();
+  
+  if (!list_exists) {
+    messages.push_back({false});
+  } 
+
+  return messages;
+}
+
+std::vector<NumTagGroups::Message> NumTagGroups::run(const ADMData &adm) const {
+  std::vector<Message> messages;
+
+  bool list_exists = adm.document.read()->has<adm::TagList>();
+  size_t n = 0;
+  if (list_exists) {
+    auto tagList = adm.document.read()->get<adm::TagList>();
+    n = tagList.get<adm::TagGroups>().size();
+  }
+  if (!range(n)) messages.push_back({n});
+
+  return messages;
+}
+
+std::vector<TagClassPresent::Message> TagClassPresent::run(const ADMData &adm) const {
+  std::vector<Message> messages;
+  bool list_exists = adm.document.read()->has<adm::TagList>();
+  size_t valid_classes = 0;
+  if (list_exists) {
+    auto tagList = adm.document.read()->get<adm::TagList>();
+    for (auto const& group : tagList.get<adm::TagGroups>()) {
+      auto tags = group.get<adm::Tags>();
+      for (auto const& tag : tags) {
+        auto tagClass = tag.get<adm::TagClass>();
+        if (tagClass.get().find(class_substr) != std::string::npos) {
+          valid_classes++;
+        }
+      }
+    }
+  }
+  if (valid_classes == 0) messages.push_back({valid_classes});
+
+  return messages;
+}
+
+std::vector<ProfileListPresent::Message> ProfileListPresent::run(const ADMData &adm) const {
+  std::vector<Message> messages;
+  bool list_exists = adm.document.read()->has<adm::ProfileList>();
+  
+  if (!list_exists) {
+    messages.push_back({false});
+  } 
+
+  return messages;
+}
+
+std::vector<ProfileNameValuePresent::Message> ProfileNameValuePresent::run(const ADMData &adm) const {
+  std::vector<Message> messages;
+  bool list_exists = adm.document.read()->has<adm::ProfileList>();
+  bool valid_name = false;
+  bool valid_value = false;
+  if (list_exists) {
+    auto profileList = adm.document.read()->get<adm::ProfileList>();
+    for (auto const& profile : profileList.get<adm::Profiles>()) {
+      auto value = profile.get<adm::ProfileValue>().get();
+      auto name = profile.get<adm::ProfileName>().get();
+      if (name.find(name_str) == 0) valid_name = true;
+      if (value.find(value_str) == 0) valid_value = true;
+    }
+  }
+  if (valid_name == 0 || valid_value == 0) messages.push_back({valid_name, valid_value});
+
+  return messages;
+}
+
+
 ValidationResults ProfileValidator::run(const ADMData &adm) const {
   ValidationResults results;
 
@@ -172,6 +249,45 @@ struct FormatVisitor {
     return adm::formatId(m.stream_id) + " has both audioPackForamtIdRef and audioTrackFormatIdRef elements";
   }
 
+  std::string operator()(const TagListPresent &) {
+    return "tagList must be present";
+  }
+
+  std::string operator()(const TagListPresentMessage &m) {
+    return std::string(m.list_exists ? "tagList present" : "tagList not present");
+  }
+
+  std::string operator()(const NumTagGroups &c) {
+    return "tagList must have " + c.range.format() + " tagGroups";
+  }
+
+  std::string operator()(const NumTagGroupsMessage &m) {
+    return "tagList has " + std::to_string(m.n) + " tagGroups";
+  }
+
+  std::string operator()(const TagClassPresent &) {
+    return "tag with Layer class must be present";
+  }
+
+  std::string operator()(const TagClassPresentMessage &m) {
+    return "tag has " + std::to_string(m.valid_classes) + " valid classes";
+  }
+
+  std::string operator()(const ProfileListPresent &) {
+    return "profileList must be present";
+  }
+
+  std::string operator()(const ProfileListPresentMessage &m) {
+    return std::string(m.list_exists ? "profileList present" : "profileList not present");
+  }
+
+  std::string operator()(const ProfileNameValuePresent &) {
+    return "profile with required name and value must be present";
+  }
+
+  std::string operator()(const ProfileNameValuePresentMessage &m) {
+    return "profile has " + std::string{m.valid_name ? "correct" : "incorrect"} + " name and " + std::string{m.valid_value ? "correct" : "incorrect"} + " value";
+  }
 
   std::string operator()(const StringLength &c) {
     return ev::dotted_path(c.path) + " must be " + c.range.format() + " characters long";
@@ -418,15 +534,14 @@ ProfileValidator make_production_profile_validator() {
   checks.push_back(ElementPresent{{"audioContent"}, "dialogue", true});
 
   // tagList and profileList presence 
-  checks.push_back(ElementPresent{{}, "tagList", true});
-  checks.push_back(NumElements{{"tagList"}, "tagGroup", CountRange::between(1, 6), "elements"});
-  checks.push_back(ElementPresent{{"tagList", "tagGroup"}, "tag", true});
+  checks.push_back(TagListPresent{});
+  checks.push_back(NumTagGroups{CountRange::between(1, 6)});
+  checks.push_back(TagClassPresent{"urn:profile:production:Layer"});
 
   checks.push_back(ElementInList<std::string>{{"version"}, {"ITU-R_BS.2076-3"}});
 
-  checks.push_back(ElementPresent{{}, "profileList", true});
-  checks.push_back(NumElements{{"profileList"}, "profile", CountRange::at_least(1), "elements"});
-  checks.push_back(ElementInList<std::string>{{"profileList", "profile", "profileValue"}, {"EBU Tech 3393"}});
+  checks.push_back(ProfileListPresent{});
+  checks.push_back(ProfileNameValuePresent{"EBU Production Profile", "EBU Tech 3393"});
 
   return {checks};
 }
