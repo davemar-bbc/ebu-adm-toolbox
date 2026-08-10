@@ -53,6 +53,7 @@ target_sources(
           process/squeezer_pp.cpp
           process/tag_levels.cpp
           process/sub_document.cpp
+          process/add_tag_layers.cpp
           process/squeezer_emi_dlb.cpp)
 
 if(EAT_BUILD_TESTS)

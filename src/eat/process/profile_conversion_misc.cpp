@@ -45,11 +45,11 @@ class SetProfiles : public FunctionalAtomicProcess {
     std::vector<adm::Profile> adm_profiles;
     for (auto &profile : profiles) adm_profiles.push_back(std::visit(ToAdmProfile(), profile));
 
-    auto profile_list = std::make_shared<adm::ProfileList>();
+    adm::ProfileList profile_list;
     for (auto &adm_profile : adm_profiles) {
-      profile_list->add(adm_profile);
+      profile_list.add(adm_profile);
     }
-    doc->add(profile_list);
+    doc->set(profile_list);
 
     adm.document = std::move(doc);
     out_axml->set_value(std::move(adm));

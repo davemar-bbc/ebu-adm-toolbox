@@ -129,8 +129,8 @@ bool VisitableImpl<std::shared_ptr<Document>>::visit(const std::string &desc,
   HANDLE_ELEMENTS(audioStreamFormat, AudioStreamFormat);
   HANDLE_ELEMENTS(audioTrackFormat, AudioTrackFormat);
   HANDLE_ELEMENTS(audioTrackUid, AudioTrackUid);
-  HANDLE_ELEMENT(tagList, TagList);
-  HANDLE_ELEMENT(profileList, ProfileList);
+  //HANDLE_ELEMENT(tagList, TagList);
+  //HANDLE_ELEMENT(profileList, ProfileList);
   HANDLE_ATTRIBUTE(version, Version);
 
   return false;
@@ -355,8 +355,8 @@ template <>
 bool VisitableImpl<std::shared_ptr<TagGroup>>::visit(const std::string &desc,
                                   const std::function<void(VisitablePtr)> &cb) {
   if (desc == "tag") {
-    for (auto &element : ref().get<adm::TTags>()) {
-      cb(make_visitable(std::make_shared<TTag>(element)));
+    for (auto &element : ref().get<adm::Tags>()) {
+      cb(make_visitable(std::make_shared<Tag>(element)));
     }
     return true;
   }

@@ -24,48 +24,46 @@ namespace eat::process {
 std::vector<Level> buildLevelList(std::shared_ptr<Document> doc) {
   std::vector<Level> levels;
 
-  auto tag_list = doc->getElement<TagList>();
-  if (tag_list->has<TagGroups>()) {
-    auto tag_groups = tag_list->get<TagGroups>();
-    // Loop through the tagGroups
-    for (auto tag_group : tag_groups) {
-      auto tags = tag_group.get<TTags>();
-      uint16_t lev_val = 0;
-      // Find the level values in the tags
-      for (auto tag : tags) {
-        if (tag.has<TTagClass>()) {
-          if (tag.get<TTagClass>() == "urn:profile:production:Layer") {
-            if (tag.has<TTagValue>()) {
-              lev_val = std::stoi(tag.get<TTagValue>().get());
+  if (doc->has<TagList>()) {
+    auto tag_list = doc->get<TagList>();
+    if (tag_list.has<TagGroups>()) {
+      auto tag_groups = tag_list.get<TagGroups>();
+      // Loop through the tagGroups
+      for (auto tag_group : tag_groups) {
+        auto tags = tag_group.get<Tags>();
+        uint16_t lev_val = 0;
+        // Find the level values in the tags
+        for (auto tag : tags) {
+          if (tag.get<TagClass>() == "urn:profile:production:Layer") {
+            lev_val = std::stoi(tag.get<TagValue>().get());
+          }
+        }
+        // Build up the list of the referenced elements for each level
+        if (lev_val > 0) {
+          bool exists = false;
+          for (auto level : levels) {
+            if (level.lev_num == lev_val) {
+              exists = true;
             }
           }
-        }
-      }
-      // Build up the list of the referenced elements for each level
-      if (lev_val > 0) {
-        bool exists = false;
-        for (auto level : levels) {
-          if (level.lev_num == lev_val) {
-            exists = true;
+          if (!exists) {
+            Level level;
+            level.lev_num = lev_val;
+            // Generate the lists of the top-level elements for this level
+            for (auto &programme : tag_group.getReferences<AudioProgramme>()) {
+              level.programme_list.push_back(programme);
+            }
+            for (auto &content : tag_group.getReferences<AudioContent>()) {
+              level.content_list.push_back(content);
+            }
+            for (auto &object : tag_group.getReferences<AudioObject>()) {
+              level.object_list.push_back(object);
+            }
+            levels.push_back(level);
+          } else {
+            // Should never get here
+            std::cerr << "Level already exists " << std::endl;
           }
-        }
-        if (!exists) {
-          Level level;
-          level.lev_num = lev_val;
-          // Generate the lists of the top-level elements for this level
-          for (auto &programme : tag_group.getReferences<AudioProgramme>()) {
-            level.programme_list.push_back(programme);
-          }
-          for (auto &content : tag_group.getReferences<AudioContent>()) {
-            level.content_list.push_back(content);
-          }
-          for (auto &object : tag_group.getReferences<AudioObject>()) {
-            level.object_list.push_back(object);
-          }
-          levels.push_back(level);
-        } else {
-          // Should never get here
-          std::cerr << "Level already exists " << std::endl;
         }
       }
     }

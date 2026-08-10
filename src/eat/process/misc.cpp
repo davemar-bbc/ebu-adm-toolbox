@@ -2,9 +2,12 @@
 
 #include <adm/document.hpp>
 #include <adm/utilities/block_duration_assignment.hpp>
+#include <adm/utilities/id_assignment.hpp>
 
 #include "eat/framework/exceptions.hpp"
 #include "eat/process/adm_bw64.hpp"
+
+#include <iostream>
 
 using namespace eat::framework;
 
@@ -119,6 +122,23 @@ class ConvertTrackStreamToChannel : public FunctionalAtomicProcess {
         track->removeReference<adm::AudioTrackFormat>();
         track->setReference(channelFormat);
       }
+    }
+
+    // Clear out audioTrackFormats that aren't needed
+    std::vector<std::shared_ptr<adm::AudioTrackFormat>> tf_vec;
+    for (const auto& track_format : doc->getElements<adm::AudioTrackFormat>()) {
+      tf_vec.push_back(track_format);
+    }
+    for (auto tf : tf_vec) {
+      if (!doc->remove(tf)) throw std::runtime_error("trying to remove a missing audioTrackFormat");
+    }
+    // Clear out audioStreamFormats that aren't needed
+    std::vector<std::shared_ptr<adm::AudioStreamFormat>> sf_vec;
+    for (const auto& stream_format : doc->getElements<adm::AudioStreamFormat>()) {
+      sf_vec.push_back(stream_format);
+    }
+    for (auto sf : sf_vec) {
+      if (!doc->remove(sf)) throw std::runtime_error("trying to remove a missing audioStreamFormat");
     }
 
     adm.document = std::move(doc);
