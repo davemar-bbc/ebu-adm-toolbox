@@ -1,0 +1,86 @@
+{
+    "$schema": "../data/schemas/config.schema.json",
+    "version": 0,
+    "processes": [
+        {
+            "name": "input",
+            "type": "read_adm_bw64",
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "fix_ds_frequency",
+            "type": "fix_ds_frequency",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "fix_block_durations",
+            "type": "fix_block_durations",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "fix_stream_pack_refs",
+            "type": "fix_stream_pack_refs",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "convert_track_stream_to_channel",
+            "type": "convert_track_stream_to_channel",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "resample_blocks",
+            "type": "resample_blocks",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"],
+            "parameters": {
+                "min_duration": "00:00:00.001"
+            }
+        },
+        {
+            "name": "add_tag_layers",
+            "type": "add_tag_layers",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "add_importance_defaults",
+            "type": "add_importance_defaults",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "set_profiles",
+            "type": "set_profiles",
+            "parameters": {
+                "profiles": [
+                    {
+                        "type": "ebu_production"
+                    }
+                ]
+            },
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "set_version",
+            "type": "set_version",
+            "parameters": {
+                "version": "ITU-R_BS.2076-3"
+            },
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
+            "name": "output",
+            "type": "write_adm_bw64",
+            "in_ports": ["in_axml"]
+        }
+    ],
+    "connections": [
+        ["input.out_samples", "output.in_samples"]
+    ]
+}
