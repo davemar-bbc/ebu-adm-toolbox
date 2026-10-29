@@ -196,14 +196,17 @@ if(EAT_BUILD)
     add_executable(object_chop)
     target_link_libraries(object_chop PRIVATE EBU::eat)
 
-    #add_executable(bw64_to_sadm)
-    #target_link_libraries(bw64_to_sadm PRIVATE EBU::eat)
+    add_executable(bw64_to_sadm)
+    target_link_libraries(bw64_to_sadm PRIVATE EBU::eat)
 
     add_executable(squeezer_pp2emi)
     target_link_libraries(squeezer_pp2emi PRIVATE EBU::eat)
 
     add_executable(squeezer_emi2dlb)
     target_link_libraries(squeezer_emi2dlb PRIVATE EBU::eat)
+
+    add_executable(bw64_render)
+    target_link_libraries(bw64_render PRIVATE EBU::eat)
 
     add_subdirectory(src/examples)
   endif()
