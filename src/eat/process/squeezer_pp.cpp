@@ -56,6 +56,9 @@ class SqueezerProdProf : public StreamingAtomicProcess {
     }
     if (lev_ptr == nullptr) throw std::runtime_error("level number does not exist");
 
+    // Determine which coordinate system is being used
+    bool cartesian = determineCoords(doc);
+
     // Create the new output ADM document
     createNewDoc(lev_ptr);
 
@@ -68,7 +71,7 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       SubDocument sub_document;
       auto max_chans = sub_document.create(doc, channel_map_, object); 
 
-      if (max_chans > 8) max_chans = 8;  // Set to 8 for the emission profile for now.
+      //if (max_chans > 8) max_chans = 8;  // Set to 8 for the emission profile for now.
       auto layout = chooseLayout(max_chans);
       auto num_chans = layoutChans(layout);
       if (num_chans > max_chans) num_chans = max_chans;
@@ -81,7 +84,7 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       local_adm.channel_map = sub_document.getChannelMap();
 
       // Add the new ADM metadata for the rendered version of the audioObject to the new document
-      addNewDoc(local_adm.document.read(), lev_ptr->programme_list, layout, track_num, num_chans);
+      addNewDoc(local_adm.document.read(), lev_ptr->programme_list, layout, track_num, num_chans, cartesian, false);
       //auto num_tracks = layout.channels().size();
 
       // Prepare the renderer for this object
@@ -96,6 +99,7 @@ class SqueezerProdProf : public StreamingAtomicProcess {
       track_num += num_chans;
     }
 
+    // Copy over complementary audioObject references
     for (auto &new_object : new_doc_->getElements<AudioObject>()) {
       for (auto main_object : doc->getElements<AudioObject>()) {
         if (main_object->get<AudioObjectId>() == new_object->get<AudioObjectId>()) {
@@ -158,6 +162,37 @@ class SqueezerProdProf : public StreamingAtomicProcess {
 
  private:
 
+  bool determineCoords(std::shared_ptr<const Document> doc) {
+    bool cartesian = false;
+    size_t num_sphpos = 0;
+    size_t num_cartpos = 0;
+    for (auto channel_format : doc->getElements<AudioChannelFormat>()) {
+      if (channel_format->get<AudioChannelFormatId>().get<TypeDescriptor>() == TypeDefinition::DIRECT_SPEAKERS) {
+        auto block_formats = channel_format->getElements<AudioBlockFormatDirectSpeakers>();
+        if (block_formats[0].has<Cartesian>()) {
+          if (block_formats[0].get<Cartesian>() == true) {
+            num_cartpos++;
+          } else {
+            num_sphpos++; 
+          }
+        } else num_sphpos++;
+      }
+      if (channel_format->get<AudioChannelFormatId>().get<TypeDescriptor>() == TypeDefinition::OBJECTS) {
+        auto block_formats = channel_format->getElements<AudioBlockFormatObjects>();
+        if (block_formats[0].has<SphericalPosition>()) num_sphpos++; 
+        if (block_formats[0].has<CartesianPosition>()) num_cartpos++;        
+      }
+    }
+    std::cout << "Coords: " << num_sphpos << " " << num_cartpos << std::endl;
+    if (num_cartpos > 0 && num_sphpos > 0) {
+      throw std::runtime_error("input contains mixed coordinate systems");
+    } 
+    if (num_cartpos > 0 && num_sphpos == 0) {
+      cartesian = true;
+    }
+    return cartesian;
+  }
+
   // Create the new output ADM document
   void createNewDoc(std::shared_ptr<Level> lev_ptr) {
     new_doc_ = Document::create();
@@ -174,14 +209,18 @@ class SqueezerProdProf : public StreamingAtomicProcess {
 
   // Add the new elements for the new document
   void addNewDoc(std::shared_ptr<const Document> sub_doc, std::vector<std::shared_ptr<AudioProgramme>> programme_list,
-                 const ear::Layout layout, size_t track_num, size_t max_chans) {
+                 const ear::Layout layout, size_t track_num, size_t max_chans, bool cartesian,
+                 bool mono_obj) {
     auto pack_format_id = audioPackFormatLookupTable().at(layout.name());
     auto new_pack_format = new_doc_->lookup(pack_format_id);
     if (max_chans == 1) { // As the renderer can't handle mono, the layout will be wrong
-      generateMonoObject(new_pack_format);
-      //pack_format_id = audioPackFormatLookupTable().at("0+1+0");
+      if (mono_obj) {
+        generateMonoObject(new_pack_format, cartesian);
+      } else {
+        pack_format_id = audioPackFormatLookupTable().at("0+1+0");
+        new_pack_format = new_doc_->lookup(pack_format_id);
+      }
     }
-    //auto new_pack_format = new_doc_->lookup(pack_format_id);
 
     for (auto content : sub_doc->getElements<AudioContent>()) {
       auto new_content = content->copy();
@@ -222,14 +261,20 @@ class SqueezerProdProf : public StreamingAtomicProcess {
   }
 
 
-  void generateMonoObject(std::shared_ptr<AudioPackFormat> &new_pack_format) {
+  void generateMonoObject(std::shared_ptr<AudioPackFormat> &new_pack_format, bool cartesian) {
     auto name = std::string("Mono_") + std::to_string(mono_co_);
     mono_co_++;
     auto new_channel_format = AudioChannelFormat::create(
             AudioChannelFormatName(name), TypeDefinition::OBJECTS);
-    CartesianPosition pos(X(0.0), Y(1.0), Z(0.0));
-    AudioBlockFormatObjects block_format(pos, Cartesian(true));
-    new_channel_format->add(block_format);
+    if (cartesian) {
+      CartesianPosition pos(X(0.0), Y(1.0), Z(0.0));
+      AudioBlockFormatObjects block_format(pos, Cartesian(true));
+      new_channel_format->add(block_format);
+    } else {
+      SphericalPosition pos(Azimuth(0.0), Elevation(0.0), Distance(1.0));
+      AudioBlockFormatObjects block_format(pos, Cartesian(false));
+      new_channel_format->add(block_format);
+    }
     new_pack_format = AudioPackFormat::create(
             AudioPackFormatName(name), TypeDefinition::OBJECTS);
     new_pack_format->addReference(new_channel_format);
@@ -253,13 +298,27 @@ class SqueezerProdProf : public StreamingAtomicProcess {
   // Selects the layout that matches the number of channels
   ear::Layout chooseLayout(size_t max_chans) {
     // This subset should suit fussy profiles
-    std::vector<ear::Layout> layouts{ear::getLayout("0+2+0"),
+    /*std::vector<ear::Layout> layouts{ear::getLayout("0+2+0"),
                                      ear::getLayout("0+5+0"),
-                                     ear::getLayout("4+5+0")}; 
+                                     ear::getLayout("4+5+0")}; */
     ear::Layout layout = ear::getLayout("0+2+0");
-    for (const auto& layoutl : /*ear::loadLayouts()*/ layouts) {
-      if (layoutl.channels().size() <= max_chans) {
+    bool found = false;
+    // Initial find a layout with the same number of channels
+    for (const auto& layoutl : ear::loadLayouts() /*layouts*/) {
+      if (layoutl.channels().size() == max_chans) {
         layout = layoutl;
+        found = true;
+      }
+    }
+    // If a match can't be found, then choose one with less than the max
+    if (!found) {
+      size_t max = 0;
+      for (const auto& layoutl : ear::loadLayouts() /*layouts*/) {
+        if (layoutl.channels().size() >= max && layoutl.channels().size() < max_chans) {
+          max = layoutl.channels().size();
+          layout = layoutl;
+          found = true;
+        }
       }
     }
     return layout;

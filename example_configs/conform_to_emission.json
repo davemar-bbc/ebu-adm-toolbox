@@ -200,6 +200,12 @@
             "out_ports": ["out_axml"]
         },
         {
+            "name": "remove_tag_list",
+            "type": "remove_tag_list",
+            "in_ports": ["in_axml"],
+            "out_ports": ["out_axml"]
+        },
+        {
             "name": "output",
             "type": "write_adm_bw64",
             "in_ports": ["in_axml"]

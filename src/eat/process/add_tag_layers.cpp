@@ -125,4 +125,32 @@ class AddImportanceDefaults : public FunctionalAtomicProcess {
 
 ProcessPtr make_add_importance_defaults(const std::string &name) { return std::make_shared<AddImportanceDefaults>(name); }
 
+
+class RemoveTagList : public FunctionalAtomicProcess {
+ public:
+  RemoveTagList(const std::string &name)
+      : FunctionalAtomicProcess(name),
+        in_axml(add_in_port<DataPort<ADMData>>("in_axml")),
+        out_axml(add_out_port<DataPort<ADMData>>("out_axml")) {}
+
+  void process() override {
+    auto adm = std::move(in_axml->get_value());
+    auto doc = adm.document.move_or_copy();
+
+    bool list_exists = doc->has<adm::TagList>();
+    if (list_exists) {
+      doc->unset<adm::TagList>();
+    }
+
+    adm.document = std::move(doc);
+    out_axml->set_value(std::move(adm));
+  }
+
+ private:
+  DataPortPtr<ADMData> in_axml;
+  DataPortPtr<ADMData> out_axml;
+};
+
+ProcessPtr make_remove_tag_list(const std::string &name) { return std::make_shared<RemoveTagList>(name); }
+
 }  // namespace eat::process

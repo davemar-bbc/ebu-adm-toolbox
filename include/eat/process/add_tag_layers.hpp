@@ -16,4 +16,11 @@ framework::ProcessPtr make_add_tag_layers(const std::string &name);
 /// - out_axml (DataPort<ADMData>) : output ADM data
 framework::ProcessPtr make_add_importance_defaults(const std::string &name);
 
+/// remove tagList
+///
+/// ports:
+/// - in_axml (DataPort<ADMData>) : input ADM data
+/// - out_axml (DataPort<ADMData>) : output ADM data
+framework::ProcessPtr make_remove_tag_list(const std::string &name);
+
 }  // namespace eat::process

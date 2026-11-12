@@ -319,6 +319,7 @@ framework::ProcessPtr make_process(nlohmann::json &config) {
       {"hoa_encoder", &make_hoa_encoder},
       {"add_tag_layers", make_process_no_args(&process::make_add_tag_layers)},
       {"add_importance_defaults", make_process_no_args(&process::make_add_importance_defaults)},
+      {"remove_tag_list", make_process_no_args(&process::make_remove_tag_list)},
   }};
 
   std::string type = get<std::string>(config, "type");

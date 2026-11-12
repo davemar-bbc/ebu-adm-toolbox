@@ -1,7 +1,7 @@
 #include <adm/write.hpp>
 #include <bw64/bw64.hpp>
 #include <adm/document.hpp>
-#include <adm/segmenter.hpp>
+#include <adm/utilities/segmenter.hpp>
 #include <string>
 #include <sstream>
 #include <unistd.h>

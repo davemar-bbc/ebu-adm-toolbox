@@ -38,11 +38,11 @@ size_t SubDocument::create(std::shared_ptr<Document> doc, channel_map_t channel_
     for (auto object_ref : content->getReferences<AudioObject>()) {
       if (object_ref == object) {
         // Restrict music content to 6 channels
-        if (content->has<NonDialogueContentKind>()) {
+        /*if (content->has<NonDialogueContentKind>()) {
           if (content->get<NonDialogueContentKind>() == NonDialogueContent::MUSIC) {
             if (max_chans > 6) max_chans = 6;
           }
-        }
+        }*/
         std::cout << std::endl;
         sub_doc_->add(content->copy());
         std::cout << "create: " << formatId(content->get<AudioContentId>()) << std::endl;
@@ -138,6 +138,7 @@ size_t SubDocument::addPackFormats(std::shared_ptr<AudioObject> object) {
   for (auto pack_format : object->getReferences<AudioPackFormat>()) {
     size_t num_chans = addChannelFormats(pack_format);
     if (num_chans > max_chans) max_chans = num_chans;
+    std::cout << "addPackFormats: " << formatId(object->get<AudioObjectId>()) << " " << formatId(pack_format->get<AudioPackFormatId>()) << " " << num_chans << std::endl;
     if (!isCommonDefinitionsId(pack_format->get<AudioPackFormatId>())) {
       sub_doc_->add(pack_format->copy());
     }

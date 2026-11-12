@@ -25,7 +25,8 @@
         {"const": "infer_object_interact"},
         {"const": "set_content_dialogue_default"},
         {"const": "add_tag_layers"},
-        {"const": "add_importance_defaults"}
+        {"const": "add_importance_defaults"},
+        {"const": "remove_tag_list"}
       ]
     }
   }
